@@ -7,13 +7,13 @@ services:
     hostname: emqx
     restart: unless-stopped
     environment:
-      - TZ=America/Bogota
-      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
-      - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
+      - TZ=${TZ:-America/Bogota}
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=${EMQX_DASHBOARD_USER:-admin}
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=${EMQX_DASHBOARD_PASSWORD:-public}
     ports:
-      - "1883:1883"     # MQTT TCP
-      - "8083:8083"     # MQTT WebSocket
-      - "18083:18083"   # Dashboard
+      - "${MQTT_TCP_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-8083}:8083"
+      - "${EMQX_DASHBOARD_PORT:-18083}:18083"
     volumes:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
