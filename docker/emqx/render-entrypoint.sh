@@ -1,9 +1,7 @@
 #!/bin/sh
 set -e
 
-# EMQX's WebSocket listener binds to an internal port only.
-# The public-facing port is handled by Caddy, which serves the health check
-# and proxies WebSocket connections to EMQX.
+# Internal port where EMQX listens for WebSocket connections.
 INTERNAL_WS_PORT=8083
 
 # Render assigns the public-facing port via the PORT environment variable.
@@ -22,10 +20,10 @@ EMQX_PID=$!
 # Ensure EMQX is terminated when this script exits.
 trap 'kill ${EMQX_PID} 2>/dev/null || true' EXIT
 
-# Wait until EMQX is ready to accept connections.
-echo "Waiting for EMQX to start..."
+# Wait for the internal WebSocket port to be open.
+echo "Waiting for EMQX to start (port ${INTERNAL_WS_PORT})..."
 for i in $(seq 1 30); do
-    if /opt/emqx/bin/emqx ctl status >/dev/null 2>&1; then
+    if nc -z localhost "${INTERNAL_WS_PORT}"; then
         echo "EMQX is ready."
         break
     fi
