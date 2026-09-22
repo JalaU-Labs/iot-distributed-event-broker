@@ -1,16 +1,25 @@
+FROM caddy:2.8-alpine AS caddy-bin
+
 FROM emqx/emqx:5.8.0
 
 ENV TZ=America/Bogota
 
-# Create the entrypoint and config template as root, then hand ownership to the
-# unprivileged emqx user before starting the container.
 USER root
+
+# Copy the Caddy binary from the official image. Caddy is a static Go binary,
+# so it runs on the Debian-based EMQX image without additional dependencies.
+COPY --from=caddy-bin /usr/bin/caddy /usr/local/bin/caddy
+
+COPY docker/emqx/Caddyfile /etc/caddy/Caddyfile
 COPY docker/emqx/emqx.render.conf.template /opt/emqx/etc/emqx.render.conf.template
 COPY docker/emqx/render-entrypoint.sh /usr/bin/render-entrypoint.sh
+
 RUN chmod +x /usr/bin/render-entrypoint.sh \
+    && mkdir -p /etc/caddy /var/lib/caddy \
     && touch /opt/emqx/etc/emqx.conf \
-    && chown -R emqx:emqx /opt/emqx/etc/ \
-    && chmod 644 /opt/emqx/etc/emqx.render.conf.template /opt/emqx/etc/emqx.conf
+    && chown -R emqx:emqx /opt/emqx/etc/ /etc/caddy /var/lib/caddy \
+    && chmod 755 /usr/local/bin/caddy
+
 USER emqx
 
 ENTRYPOINT ["/usr/bin/render-entrypoint.sh"]
