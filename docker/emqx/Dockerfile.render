@@ -1,0 +1,21 @@
+FROM emqx/emqx:5.8.0
+
+ENV TZ=America/Bogota
+
+# Render assigns the port via the PORT environment variable.
+# EMQX must listen for WebSocket connections on that port.
+# The TCP listener on 1883 is disabled because Render does not expose arbitrary TCP ports.
+ENV EMQX_LISTENERS__TCP__DEFAULT__ENABLE=false
+ENV EMQX_LISTENERS__WS__DEFAULT__ENABLE=true
+ENV EMQX_LISTENERS__WS__DEFAULT__BIND="0.0.0.0:${PORT}"
+ENV EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH="/mqtt"
+
+# Disable the dashboard listener because Render does not expose port 18083.
+ENV EMQX_DASHBOARD__LISTENERS__HTTP__ENABLE=false
+
+# Disable SSL listener (not needed, Render terminates TLS at the edge).
+ENV EMQX_LISTENERS__SSL__DEFAULT__ENABLE=false
+
+# Disable the default dashboard credentials (dashboard is off).
+ENV EMQX_DASHBOARD__DEFAULT_USERNAME=""
+ENV EMQX_DASHBOARD__DEFAULT_PASSWORD=""
