@@ -6,8 +6,10 @@ ENV TZ=America/Bogota
 
 USER root
 
-# Copy the Caddy binary from the official image. Caddy is a static Go binary,
-# so it runs on the Debian-based EMQX image without additional dependencies.
+# Install netcat for the readiness check in the entrypoint.
+RUN apt-get update && apt-get install -y --no-install-recommends netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
+# Copy the Caddy binary from the official image.
 COPY --from=caddy-bin /usr/bin/caddy /usr/local/bin/caddy
 
 COPY docker/emqx/Caddyfile /etc/caddy/Caddyfile
