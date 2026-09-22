@@ -33,7 +33,7 @@ listeners.wss.default {
 }
 
 listeners.ws.default {
-  bind = "0.0.0.0:__MQTT_WS_PORT__"
+  bind = "127.0.0.1:__MQTT_WS_PORT__"
   websocket.mqtt_path = "/mqtt"
 }
 
