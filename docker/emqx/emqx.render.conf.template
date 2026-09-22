@@ -1,12 +1,22 @@
 node {
   name = "emqx@127.0.0.1"
   cookie = "emqxsecretcookie"
+  data_dir = "/opt/emqx/data"
+  db_backend = "rlog"
+  dist_net_ticktime = 120
+}
+
+cluster {
+  proto_dist = "inet_tcp"
 }
 
 log {
   console {
     enable = true
     level = warning
+  }
+  file {
+    enable = false
   }
 }
 
