@@ -50,7 +50,11 @@ Click **Apply**. Render will:
 Once the service is live:
 
 - **MQTT WebSocket endpoint**: `wss://iot-emqx-broker.onrender.com/mqtt`
-- **Health check**: Render will check the `/status` endpoint. The service is considered healthy if it returns a `200 OK` status code.
+- **Port detection**: Render scans the container for HTTP services. The wrapper
+  script binds the EMQX WebSocket listener to the port assigned by Render via
+  the `PORT` environment variable, so Render will detect it automatically.
+- **No health check**: The blueprint does not declare a `healthCheckPath`.
+  Render will consider the service healthy as soon as the container starts.
 
 ### 5. Connect a Client
 
@@ -88,12 +92,12 @@ Check the logs in the Render dashboard. Common causes:
 - Check that `MQTT_TRANSPORT=websockets` is set in the client.
 - Ensure the service is awake (visit the Render dashboard or make an HTTP request).
 
-### Health check failing
+### Port detection fails
 
-Render's default health check expects a `200` response. The `/mqtt` endpoint returns `400` for non-WebSocket requests. To fix:
-
-1. Go to the service settings in Render.
-2. Under **Health Checks**, disable the health check or set it to a path that returns `200`. If you disable it, Render will consider the service healthy as soon as the container is running.
+If Render reports "No open HTTP ports detected", verify in the logs that the
+WebSocket listener bound to the port assigned by Render (e.g. `Listener ws:default on 0.0.0.0:10000 started.`).
+If it bound to `8083` instead, the wrapper script is not being executed. Check
+that the Dockerfile's `ENTRYPOINT` points to `/usr/local/bin/render-entrypoint.sh`.
 
 ## References
 
