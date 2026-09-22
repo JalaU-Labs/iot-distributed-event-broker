@@ -50,11 +50,11 @@ Click **Apply**. Render will:
 Once the service is live:
 
 - **MQTT WebSocket endpoint**: `wss://iot-emqx-broker.onrender.com/mqtt`
-- **Port detection**: Render scans the container for HTTP services. The wrapper
-  script binds the EMQX WebSocket listener to the port assigned by Render via
-  the `PORT` environment variable, so Render will detect it automatically.
-- **No health check**: The blueprint does not declare a `healthCheckPath`.
-  Render will consider the service healthy as soon as the container starts.
+- **Port detection**: The entrypoint renders the EMQX configuration template with
+  the port assigned by Render (`PORT`), and the WebSocket listener binds to it.
+  Render will detect the port automatically. Look for the line
+  `Listener ws:default on 0.0.0.0:<PORT> started.` in the logs, where `<PORT>`
+  is the dynamic port, not `8083`.
 
 ### 5. Connect a Client
 
@@ -94,10 +94,11 @@ Check the logs in the Render dashboard. Common causes:
 
 ### Port detection fails
 
-If Render reports "No open HTTP ports detected", verify in the logs that the
-WebSocket listener bound to the port assigned by Render (e.g. `Listener ws:default on 0.0.0.0:10000 started.`).
-If it bound to `8083` instead, the wrapper script is not being executed. Check
-that the Dockerfile's `ENTRYPOINT` points to `/usr/local/bin/render-entrypoint.sh`.
+If Render reports "No open ports detected", verify in the logs that the
+WebSocket listener bound to the port assigned by Render. If you see port `8084`
+or `8083` instead, the configuration template was not rendered correctly.
+Check that `/opt/emqx/etc/emqx.conf` exists inside the container and that the
+`sed` substitution in `render-entrypoint.sh` replaced `__MQTT_WS_PORT__`.
 
 ## References
 
