@@ -6,9 +6,6 @@ services:
     region: oregon
     dockerfilePath: ./docker/emqx/Dockerfile.render
     dockerContext: .
-    # Use a health check path that returns a 2xx status.
-    # The /status endpoint is a standard EMQX endpoint for health checks.
-    healthCheckPath: /status
     autoDeploy: true
     envVars:
       - key: TZ
@@ -17,17 +14,11 @@ services:
         value: emqx@127.0.0.1
       - key: EMQX_NODE__COOKIE
         generateValue: true
-      # The PORT variable is automatically provided by Render.
-      # We do not need to define it here.
       - key: EMQX_LISTENERS__TCP__DEFAULT__ENABLE
-        value: "false"
-      - key: EMQX_LISTENERS__WS__DEFAULT__ENABLE
-        value: "true"
-      - key: EMQX_LISTENERS__WS__DEFAULT__BIND
-        value: "0.0.0.0:${PORT}"
-      - key: EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH
-        value: "/mqtt"
-      - key: EMQX_DASHBOARD__LISTENERS__HTTP__ENABLE
         value: "false"
       - key: EMQX_LISTENERS__SSL__DEFAULT__ENABLE
         value: "false"
+      - key: EMQX_LISTENERS__WS__DEFAULT__ENABLE
+        value: "true"
+      - key: EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH
+        value: "/mqtt"
