@@ -6,6 +6,7 @@ services:
     region: oregon
     dockerfilePath: ./docker/emqx/Dockerfile.render
     dockerContext: .
+    healthCheckPath: /health
     autoDeploy: true
     envVars:
       - key: TZ
