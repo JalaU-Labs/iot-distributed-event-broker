@@ -6,15 +6,11 @@ ENV TZ=America/Bogota \
     EMQX_LISTENERS__WS__DEFAULT__ENABLE=true \
     EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH=/mqtt
 
-# Docker does not expand ${PORT} inside ENV instructions, and EMQX does not
-# expand it either when the value comes from its own environment. A small
-# wrapper script resolves the port at runtime, right before EMQX starts.
-RUN printf '%s\n' \
-    '#!/bin/sh' \
-    'set -e' \
-    'export EMQX_LISTENERS__WS__DEFAULT__BIND="0.0.0.0:${PORT:-8083}"' \
-    'exec /usr/bin/docker-entrypoint.sh "$@"' \
-    > /usr/local/bin/render-entrypoint.sh \
-    && chmod +x /usr/local/bin/render-entrypoint.sh
+# Create the entrypoint as root (the emqx user cannot write to /usr/bin),
+# then return to the unprivileged emqx user.
+USER root
+COPY docker/emqx/render-entrypoint.sh /usr/bin/render-entrypoint.sh
+RUN chmod +x /usr/bin/render-entrypoint.sh
+USER emqx
 
-ENTRYPOINT ["/usr/local/bin/render-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/render-entrypoint.sh"]
