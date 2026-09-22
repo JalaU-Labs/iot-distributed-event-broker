@@ -14,9 +14,30 @@ Render's free plan does not expose arbitrary TCP ports. The standard MQTT port 1
 
 This means:
 
-- The broker listens on a dynamic port assigned by Render via the `PORT` environment variable.
-- Clients must connect using `wss://<service-name>.onrender.com/mqtt` (TLS is terminated by Render).
-- The TCP listener (1883) and the dashboard (18083) are disabled in production.
+- Caddy listens on the dynamic port assigned by Render via the `PORT` environment variable.
+- Caddy serves a `/health` endpoint for Render's health checks and reverse-proxies `/mqtt` to EMQX.
+- EMQX binds its WebSocket listener to `127.0.0.1:8083`, only reachable from inside the container.
+- Clients connect using `wss://<service-name>.onrender.com/mqtt`.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Internet
+        Client[MQTT Client<br/>Publisher / Consumer]
+    end
+
+    subgraph Render["Render (Free Tier)"]
+        subgraph Container["Docker Container"]
+            Caddy["Caddy<br/>Reverse Proxy<br/>listening on $PORT"]
+            EMQX["EMQX 5.8<br/>WebSocket listener<br/>127.0.0.1:8083"]
+        end
+    end
+
+    Client -->|HTTPS / WSS<br/>port 443| Caddy
+    Caddy -->|/health → 200 OK| Client
+    Caddy -->|/mqtt → reverse proxy| EMQX
+```
 
 ## Deployment Steps
 
@@ -47,32 +68,19 @@ Click **Apply**. Render will:
 
 ### 4. Verify the Deployment
 
-Once the service is live:
+Once the service is live, verify with:
+
+```bash
+curl https://iot-emqx-broker.onrender.com/health
+# Expected: 200 OK with body "OK"
+
+curl -i https://iot-emqx-broker.onrender.com/mqtt
+# Expected: 200 OK (Caddy handles the fallback), or 400 if no WebSocket upgrade
+```
 
 - **MQTT WebSocket endpoint**: `wss://iot-emqx-broker.onrender.com/mqtt`
-- **Health check**: Render checks `GET /health`, which is served by Caddy and
-  returns `200 OK`. This is what allows Render to mark the service as Live.
-- **Port detection**: Caddy listens on the port assigned by Render via the
-  `PORT` environment variable. EMQX's internal WebSocket listener binds to
-  `localhost:8083`, which is only reachable from inside the container.
-
-### Architecture
-
-```
-                    Render (HTTPS, port 443)
-                            |
-                            v
-              +-----------------------------+
-              |  Caddy (container, port $PORT) |
-              +-----------------------------+
-                  |                    |
-                  | /health            | /mqtt
-                  v                    v
-              "OK" 200         EMQX WS listener (localhost:8083)
-                                       |
-                                       v
-                                  MQTT broker
-```
+- **Health check**: Render checks `GET /health`, which Caddy responds to with `200 OK`.
+- **Port detection**: Caddy binds to the port assigned by Render. EMQX binds internally to `127.0.0.1:8083`.
 
 ### 5. Connect a Client
 
@@ -88,20 +96,40 @@ MQTT_WS_PATH=/mqtt
 
 These variables are read by the application (see `.env.example`).
 
+## Sequence of Events During Startup
+
+```mermaid
+sequenceDiagram
+    participant R as Render
+    participant E as Entrypoint
+    participant EMQX
+    participant C as Caddy
+
+    R->>E: Start container with PORT=<dynamic>
+    E->>E: Render emqx.conf from template
+    E->>EMQX: Launch in background
+    EMQX-->>EMQX: Bind WS listener to 127.0.0.1:8083
+    E->>EMQX: Poll port 8083 via netcat
+    EMQX-->>E: Port open
+    E->>C: exec caddy run
+    C->>C: Bind to 0.0.0.0:$PORT
+    C-->>R: /health responds 200 OK
+    R-->>R: Mark service as Live
+```
+
 ## Free Plan Limitations
 
 - **No persistent disk**: All messages and sessions are lost when the service restarts.
-- **Spin-down**: The service sleeps after 15 minutes without inbound traffic. While the publisher is active (publishing every 2 seconds), the service stays awake. When the publisher stops, the service sleeps and the consumer must reconnect.
+- **Spin-down**: The service sleeps after 15 minutes without inbound traffic. While the publisher is active, the service stays awake. When the publisher stops, the service sleeps and the consumer must reconnect.
 - **Cold start**: After sleeping, the first connection takes ~30 seconds to wake the service.
 
 ## Troubleshooting
 
-### Service fails to start
+### Service stuck in "In Progress"
 
-Check the logs in the Render dashboard. Common causes:
-
-- Port binding conflict: ensure `EMQX_LISTENERS__WS__DEFAULT__BIND` is set to `0.0.0.0:${PORT}`.
-- Invalid environment variable format: EMQX uses double underscores (`__`) for nested config keys.
+1. Check that Caddy's admin API is disabled (`admin off` in `Caddyfile`). If enabled, it binds to port 2019 and Render's port scanner can confuse it with the actual service port.
+2. Verify the log line `Using Render-assigned port: <N>`. It must match the port Render assigned.
+3. Verify `Listener ws:default on 127.0.0.1:8083 started.` appears before Caddy starts.
 
 ### Client cannot connect
 
@@ -110,16 +138,13 @@ Check the logs in the Render dashboard. Common causes:
 - Check that `MQTT_TRANSPORT=websockets` is set in the client.
 - Ensure the service is awake (visit the Render dashboard or make an HTTP request).
 
-### Port detection fails
+### gen_rpc errors in the logs
 
-If Render reports "No open ports detected", verify in the logs that the
-WebSocket listener bound to the port assigned by Render. If you see port `8084`
-or `8083` instead, the configuration template was not rendered correctly.
-Check that `/opt/emqx/etc/emqx.conf` exists inside the container and that the
-`sed` substitution in `render-entrypoint.sh` replaced `__MQTT_WS_PORT__`.
+Messages such as `gen_rpc_client_auth_timeout` are internal Erlang RPC warnings emitted by EMQX. They are harmless and do not affect broker operation. They can be safely ignored.
 
 ## References
 
 - [Render Blueprint YAML Reference](https://render.com/docs/blueprint-spec)
 - [Render Free Plan Limitations](https://render.com/docs/free)
 - [EMQX Configuration via Environment Variables](https://www.emqx.io/docs/en/v5.8/configuration/configuration.html)
+- [Caddy Documentation](https://caddyserver.com/docs/)
