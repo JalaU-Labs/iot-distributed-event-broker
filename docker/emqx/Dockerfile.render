@@ -1,16 +1,18 @@
-FROM caddy:2.8-alpine AS caddy-bin
-
 FROM emqx/emqx:5.8.0
 
 ENV TZ=America/Bogota
 
 USER root
 
-# Install netcat for the readiness check in the entrypoint.
-RUN apt-get update && apt-get install -y --no-install-recommends netcat-openbsd && rm -rf /var/lib/apt/lists/*
-
-# Copy the Caddy binary from the official image.
-COPY --from=caddy-bin /usr/bin/caddy /usr/local/bin/caddy
+# Install netcat for the readiness check, download the official static Caddy
+# binary from GitHub releases, and clean up build-time dependencies.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends netcat-openbsd curl ca-certificates \
+    && curl -fsSL "https://github.com/caddyserver/caddy/releases/download/v2.8.4/caddy_2.8.4_linux_amd64.tar.gz" \
+        | tar -xz -C /usr/bin/ caddy \
+    && chmod 755 /usr/bin/caddy \
+    && apt-get purge -y --auto-remove curl \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY docker/emqx/Caddyfile /etc/caddy/Caddyfile
 COPY docker/emqx/emqx.render.conf.template /opt/emqx/etc/emqx.render.conf.template
@@ -19,8 +21,7 @@ COPY docker/emqx/render-entrypoint.sh /usr/bin/render-entrypoint.sh
 RUN chmod +x /usr/bin/render-entrypoint.sh \
     && mkdir -p /etc/caddy /var/lib/caddy \
     && touch /opt/emqx/etc/emqx.conf \
-    && chown -R emqx:emqx /opt/emqx/etc/ /etc/caddy /var/lib/caddy \
-    && chmod 755 /usr/local/bin/caddy
+    && chown -R emqx:emqx /opt/emqx/etc/ /etc/caddy /var/lib/caddy
 
 USER emqx
 
