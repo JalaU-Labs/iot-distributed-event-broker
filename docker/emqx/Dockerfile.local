@@ -1,6 +1,5 @@
 FROM emqx/emqx:5.8.0
 
 ENV TZ=America/Bogota
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY docker/emqx/emqx.conf /opt/emqx/etc/emqx.conf
