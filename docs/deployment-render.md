@@ -50,7 +50,7 @@ Click **Apply**. Render will:
 Once the service is live:
 
 - **MQTT WebSocket endpoint**: `wss://iot-emqx-broker.onrender.com/mqtt`
-- **Health check**: Render will attempt `GET /mqtt`. A `400` response is expected because the endpoint expects a WebSocket handshake. If Render marks the service as unhealthy, disable the health check in the dashboard or change it to a path that returns `200`.
+- **Health check**: Render will check the `/status` endpoint. The service is considered healthy if it returns a `200 OK` status code.
 
 ### 5. Connect a Client
 
