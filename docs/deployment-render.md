@@ -50,11 +50,29 @@ Click **Apply**. Render will:
 Once the service is live:
 
 - **MQTT WebSocket endpoint**: `wss://iot-emqx-broker.onrender.com/mqtt`
-- **Port detection**: The entrypoint renders the EMQX configuration template with
-  the port assigned by Render (`PORT`), and the WebSocket listener binds to it.
-  Render will detect the port automatically. Look for the line
-  `Listener ws:default on 0.0.0.0:<PORT> started.` in the logs, where `<PORT>`
-  is the dynamic port, not `8083`.
+- **Health check**: Render checks `GET /health`, which is served by Caddy and
+  returns `200 OK`. This is what allows Render to mark the service as Live.
+- **Port detection**: Caddy listens on the port assigned by Render via the
+  `PORT` environment variable. EMQX's internal WebSocket listener binds to
+  `localhost:8083`, which is only reachable from inside the container.
+
+### Architecture
+
+```
+                    Render (HTTPS, port 443)
+                            |
+                            v
+              +-----------------------------+
+              |  Caddy (container, port $PORT) |
+              +-----------------------------+
+                  |                    |
+                  | /health            | /mqtt
+                  v                    v
+              "OK" 200         EMQX WS listener (localhost:8083)
+                                       |
+                                       v
+                                  MQTT broker
+```
 
 ### 5. Connect a Client
 
