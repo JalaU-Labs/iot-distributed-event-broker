@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: iot-emqx-broker
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./docker/emqx/Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /mqtt
+    autoDeploy: true
+    envVars:
+      - key: TZ
+        value: America/Bogota
+      - key: EMQX_NODE__NAME
+        value: emqx@127.0.0.1
+      - key: EMQX_NODE__COOKIE
+        generateValue: true
+      - key: EMQX_LISTENERS__TCP__DEFAULT__ENABLE
+        value: "false"
+      - key: EMQX_LISTENERS__WS__DEFAULT__ENABLE
+        value: "true"
+      - key: EMQX_LISTENERS__WS__DEFAULT__BIND
+        value: "0.0.0.0:${PORT}"
+      - key: EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH
+        value: "/mqtt"
+      - key: EMQX_DASHBOARD__LISTENERS__HTTP__ENABLE
+        value: "false"
+      - key: EMQX_LISTENERS__SSL__DEFAULT__ENABLE
+        value: "false"
