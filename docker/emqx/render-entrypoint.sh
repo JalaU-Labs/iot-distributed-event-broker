@@ -7,4 +7,6 @@ set -e
 # This wrapper resolves the port at runtime, right before EMQX starts.
 export EMQX_LISTENERS__WS__DEFAULT__BIND="0.0.0.0:${PORT:-8083}"
 
-exec /usr/bin/docker-entrypoint.sh "$@"
+# Pass the original CMD arguments to the EMQX entrypoint.
+# Without this, EMQX starts without the "foreground" argument and exits immediately.
+exec /usr/bin/docker-entrypoint.sh /opt/emqx/bin/emqx foreground
