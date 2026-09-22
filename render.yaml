@@ -14,11 +14,3 @@ services:
         value: emqx@127.0.0.1
       - key: EMQX_NODE__COOKIE
         generateValue: true
-      - key: EMQX_LISTENERS__TCP__DEFAULT__ENABLE
-        value: "false"
-      - key: EMQX_LISTENERS__SSL__DEFAULT__ENABLE
-        value: "false"
-      - key: EMQX_LISTENERS__WS__DEFAULT__ENABLE
-        value: "true"
-      - key: EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH
-        value: "/mqtt"
