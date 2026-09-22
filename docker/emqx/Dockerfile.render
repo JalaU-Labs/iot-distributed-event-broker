@@ -1,16 +1,16 @@
 FROM emqx/emqx:5.8.0
 
-ENV TZ=America/Bogota \
-    EMQX_LISTENERS__TCP__DEFAULT__ENABLE=false \
-    EMQX_LISTENERS__SSL__DEFAULT__ENABLE=false \
-    EMQX_LISTENERS__WS__DEFAULT__ENABLE=true \
-    EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH=/mqtt
+ENV TZ=America/Bogota
 
-# Create the entrypoint as root (the emqx user cannot write to /usr/bin),
-# then return to the unprivileged emqx user.
+# Create the entrypoint and config template as root, then hand ownership to the
+# unprivileged emqx user before starting the container.
 USER root
+COPY docker/emqx/emqx.render.conf.template /opt/emqx/etc/emqx.render.conf.template
 COPY docker/emqx/render-entrypoint.sh /usr/bin/render-entrypoint.sh
-RUN chmod +x /usr/bin/render-entrypoint.sh
+RUN chmod +x /usr/bin/render-entrypoint.sh \
+    && touch /opt/emqx/etc/emqx.conf \
+    && chown -R emqx:emqx /opt/emqx/etc/ \
+    && chmod 644 /opt/emqx/etc/emqx.render.conf.template /opt/emqx/etc/emqx.conf
 USER emqx
 
 ENTRYPOINT ["/usr/bin/render-entrypoint.sh"]
