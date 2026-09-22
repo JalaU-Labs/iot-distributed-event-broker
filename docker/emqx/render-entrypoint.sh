@@ -5,8 +5,14 @@ set -e
 INTERNAL_WS_PORT=8083
 
 # Render assigns the public-facing port via the PORT environment variable.
-RENDER_PORT="${PORT:-8083}"
-export PORT="${RENDER_PORT}"
+# Caddy will read this variable directly from the Caddyfile (":{$PORT}").
+# Do NOT overwrite PORT here; doing so forces Caddy to bind to the wrong port.
+if [ -z "${PORT}" ]; then
+    echo "ERROR: PORT environment variable is not set. Render must provide it."
+    exit 1
+fi
+
+echo "Using Render-assigned port: ${PORT}"
 
 # Render the EMQX configuration with the internal WS port.
 sed "s/__MQTT_WS_PORT__/${INTERNAL_WS_PORT}/g" \
@@ -31,4 +37,5 @@ for i in $(seq 1 30); do
 done
 
 # Start Caddy in the foreground as the main process.
+# Caddy expands {$PORT} from the environment automatically.
 exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
