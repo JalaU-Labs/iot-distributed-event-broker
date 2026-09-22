@@ -14,3 +14,4 @@ RUN chmod +x /usr/bin/render-entrypoint.sh
 USER emqx
 
 ENTRYPOINT ["/usr/bin/render-entrypoint.sh"]
+CMD ["/opt/emqx/bin/emqx", "foreground"]
