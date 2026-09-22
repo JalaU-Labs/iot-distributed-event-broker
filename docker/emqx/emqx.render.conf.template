@@ -1,0 +1,39 @@
+node {
+  name = "emqx@127.0.0.1"
+  cookie = "emqxsecretcookie"
+}
+
+log {
+  console {
+    enable = true
+    level = warning
+  }
+}
+
+listeners.tcp.default {
+  enable = false
+}
+
+listeners.ssl.default {
+  enable = false
+}
+
+listeners.wss.default {
+  enable = false
+}
+
+listeners.ws.default {
+  bind = "0.0.0.0:__MQTT_WS_PORT__"
+  websocket.mqtt_path = "/mqtt"
+}
+
+dashboard {
+  listeners.http {
+    enable = false
+  }
+}
+
+authorization {
+  no_match = allow
+  deny_action = ignore
+}
