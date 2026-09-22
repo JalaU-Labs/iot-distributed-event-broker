@@ -1,0 +1,13 @@
+:{$PORT} {
+	handle /health {
+		respond "OK" 200
+	}
+
+	handle /mqtt* {
+		reverse_proxy localhost:8083
+	}
+
+	handle {
+		respond "EMQX MQTT broker - WebSocket endpoint at /mqtt" 200
+	}
+}
