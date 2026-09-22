@@ -1,26 +1,20 @@
 FROM emqx/emqx:5.8.0
 
-# Install tzdata to ensure timezone configuration works correctly
-RUN apk add --no-cache tzdata
+ENV TZ=America/Bogota \
+    EMQX_LISTENERS__TCP__DEFAULT__ENABLE=false \
+    EMQX_LISTENERS__SSL__DEFAULT__ENABLE=false \
+    EMQX_LISTENERS__WS__DEFAULT__ENABLE=true \
+    EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH=/mqtt
 
-ENV TZ=America/Bogota
+# Docker does not expand ${PORT} inside ENV instructions, and EMQX does not
+# expand it either when the value comes from its own environment. A small
+# wrapper script resolves the port at runtime, right before EMQX starts.
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -e' \
+    'export EMQX_LISTENERS__WS__DEFAULT__BIND="0.0.0.0:${PORT:-8083}"' \
+    'exec /usr/bin/docker-entrypoint.sh "$@"' \
+    > /usr/local/bin/render-entrypoint.sh \
+    && chmod +x /usr/local/bin/render-entrypoint.sh
 
-# Disable TCP listener as Render does not expose arbitrary ports
-ENV EMQX_LISTENERS__TCP__DEFAULT__ENABLE=false
-
-# Disable SSL listener (Render terminates TLS)
-ENV EMQX_LISTENERS__SSL__DEFAULT__ENABLE=false
-
-# Enable WebSocket listener
-ENV EMQX_LISTENERS__WS__DEFAULT__ENABLE=true
-# Use the PORT environment variable provided by Render.
-# EMQX will expand this at runtime.
-ENV EMQX_LISTENERS__WS__DEFAULT__BIND="0.0.0.0:${PORT}"
-ENV EMQX_LISTENERS__WS__DEFAULT__WEBSOCKET__MQTT_PATH="/mqtt"
-
-# Disable the dashboard listener (port 18083 is not exposed)
-ENV EMQX_DASHBOARD__LISTENERS__HTTP__ENABLE=false
-
-# Clear default dashboard credentials
-ENV EMQX_DASHBOARD__DEFAULT_USERNAME=""
-ENV EMQX_DASHBOARD__DEFAULT_PASSWORD=""
+ENTRYPOINT ["/usr/local/bin/render-entrypoint.sh"]
