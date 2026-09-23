@@ -12,6 +12,7 @@ from iot_system.infrastructure.config import (
     LoggingConfig,
     MQTTConfig,
     Settings,
+    WakeUpConfig,
     WeatherConfig,
     get_settings,
 )
@@ -22,6 +23,7 @@ from iot_system.infrastructure.serialization import (
     JsonSensorReadingSerializer,
     SerializationError,
 )
+from iot_system.infrastructure.wakeup import BrokerWakeUpWaiter
 from iot_system.infrastructure.weather import (
     OpenMeteoWeatherProvider,
     WeatherProviderError,
@@ -29,6 +31,7 @@ from iot_system.infrastructure.weather import (
 
 __all__ = [
     "AiomqttClient",
+    "BrokerWakeUpWaiter",
     "DeviceConfig",
     "HealthServer",
     "JsonSensorReadingSerializer",
@@ -40,6 +43,7 @@ __all__ = [
     "Settings",
     "SystemClock",
     "TTLCache",
+    "WakeUpConfig",
     "WeatherConfig",
     "WeatherProviderError",
     "configure_logging",
