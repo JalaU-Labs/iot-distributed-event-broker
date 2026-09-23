@@ -15,3 +15,42 @@ services:
         value: emqx@127.0.0.1
       - key: EMQX_NODE__COOKIE
         generateValue: true
+
+  - type: web
+    name: iot-demo-publisher
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./docker/app/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: TZ
+        value: America/Bogota
+      - key: MQTT_BROKER_HOST
+        value: iot-emqx-broker.onrender.com
+      - key: MQTT_BROKER_PORT
+        value: "443"
+      - key: MQTT_TRANSPORT
+        value: websockets
+      - key: MQTT_USE_TLS
+        value: "true"
+      - key: MQTT_WS_PATH
+        value: /mqtt
+      - key: MQTT_TOPIC_PREFIX
+        value: iot/sensors
+      - key: DEVICE_DEVICE_ID
+        value: demo-publisher-001
+      - key: DEVICE_PUBLISH_INTERVAL_SECONDS
+        value: "30"
+      - key: DEVICE_MIN_TEMPERATURE_CELSIUS
+        value: "15"
+      - key: DEVICE_MAX_TEMPERATURE_CELSIUS
+        value: "30"
+      - key: WEATHER_LATITUDE
+        value: "4.6097"
+      - key: WEATHER_LONGITUDE
+        value: "-74.0817"
+      - key: LOG_LEVEL
+        value: INFO

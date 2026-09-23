@@ -15,6 +15,7 @@ from iot_system.infrastructure.config import (
     WeatherConfig,
     get_settings,
 )
+from iot_system.infrastructure.health_server import HealthServer
 from iot_system.infrastructure.logging import configure_logging, get_logger
 from iot_system.infrastructure.mqtt import AiomqttClient, MQTTConnectionError
 from iot_system.infrastructure.serialization import (
@@ -29,6 +30,7 @@ from iot_system.infrastructure.weather import (
 __all__ = [
     "AiomqttClient",
     "DeviceConfig",
+    "HealthServer",
     "JsonSensorReadingSerializer",
     "LoggingConfig",
     "MQTTConfig",

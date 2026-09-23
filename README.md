@@ -85,6 +85,7 @@ Both repositories run the same pipeline:
 - [Architecture (C4)](docs/architecture.md)
 - [Sequence diagrams](docs/sequence.md)
 - [Render deployment guide](docs/deployment-render.md)
+- [Demo publisher](docs/demo-publisher.md)
 - [Evidence notebook](notebooks/01_mqtt_flow_evidence.ipynb)
 
 ## Deployment to Render

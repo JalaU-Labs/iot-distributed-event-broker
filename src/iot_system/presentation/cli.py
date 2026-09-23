@@ -9,6 +9,7 @@ entry points in ``pyproject.toml`` so that ``iot-publisher`` and
 from __future__ import annotations
 
 import asyncio
+import os
 import signal
 import sys
 from collections.abc import Awaitable, Callable
@@ -20,6 +21,7 @@ import typer
 from iot_system.application.consumer import SensorConsumer
 from iot_system.application.publisher import SensorPublisher
 from iot_system.infrastructure.config import get_settings
+from iot_system.infrastructure.health_server import HealthServer
 from iot_system.infrastructure.logging import configure_logging, get_logger
 from iot_system.infrastructure.mqtt import MQTTConnectionError
 from iot_system.presentation.container import Container
@@ -35,6 +37,12 @@ publisher_app = typer.Typer(
 consumer_app = typer.Typer(
     name="iot-consumer",
     help="Run the central event consumer.",
+    add_completion=False,
+    no_args_is_help=False,
+)
+demo_publisher_app = typer.Typer(
+    name="iot-demo-publisher",
+    help="Run a low-frequency publisher that keeps a cloud broker awake.",
     add_completion=False,
     no_args_is_help=False,
 )
@@ -140,6 +148,38 @@ def run_consumer() -> None:
     _execute(lambda stop_event: consumer.run_forever(stop_event))
 
 
+@demo_publisher_app.callback(invoke_without_command=True)
+def run_demo_publisher() -> None:
+    """Run the low-frequency publisher until interrupted.
+
+    This variant serves an HTTP ``/health`` endpoint on the port assigned
+    by the PaaS provider, so the service qualifies as a Render web service.
+    The publisher itself is the same ``SensorPublisher`` used elsewhere;
+    only the operational envelope differs.
+    """
+    settings = get_settings()
+    configure_logging(settings.logging)
+    port = int(os.environ.get("PORT", "8080"))
+    logger.info(
+        "cli.demo_publisher_starting",
+        broker=settings.mqtt.broker_host,
+        transport=settings.mqtt.transport,
+        interval_seconds=settings.device.publish_interval_seconds,
+        health_port=port,
+    )
+    publisher: SensorPublisher = Container(settings).build_publisher()
+
+    async def _run(stop_event: asyncio.Event) -> None:
+        health = HealthServer(host="0.0.0.0", port=port)
+        await health.start()
+        try:
+            await publisher.run_forever(stop_event)
+        finally:
+            await health.stop()
+
+    _execute(_run)
+
+
 # Root CLI that groups both commands for ad-hoc usage: `python -m ... publisher`.
 root_app = typer.Typer(
     name="iot-platform",
@@ -149,6 +189,7 @@ root_app = typer.Typer(
 )
 root_app.add_typer(publisher_app, name="publisher")
 root_app.add_typer(consumer_app, name="consumer")
+root_app.add_typer(demo_publisher_app, name="demo-publisher")
 
 
 if __name__ == "__main__":
