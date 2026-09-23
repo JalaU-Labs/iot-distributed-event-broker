@@ -1,0 +1,287 @@
+asyncapi: 3.0.0
+
+info:
+  title: IoT Distributed Event Platform
+  version: 0.1.0
+  description: |
+    Event-driven IoT platform that publishes temperature readings from
+    simulated sensors over MQTT and consumes them centrally.
+
+    The broker is EMQX 5.8. Locally it exposes plain MQTT on TCP/1883.
+    In the cloud (Render free tier) it exposes MQTT over WebSocket/TLS
+    on port 443 at `/mqtt`. The wire format is JSON-encoded UTF-8.
+
+    ## Quality of Service
+
+    Three QoS levels are used, each matched to the semantics of the
+    channel:
+
+    - **QoS 0 (at most once)** — periodic telemetry. Loss is acceptable.
+    - **QoS 1 (at least once)** — device status, retained on the broker.
+    - **QoS 2 (exactly once)** — out-of-range alerts. Duplicates forbidden.
+
+    ## Topics
+
+    All topics follow the pattern `<prefix>/<deviceId>/<channel>`, where
+    `<prefix>` defaults to `iot/sensors`. Consumers subscribe using MQTT
+    wildcards: `iot/sensors/+/temperature` and `iot/sensors/+/alert`.
+  contact:
+    name: Diego Alejandro Botina
+    email: alejandro.botina0125@jala.university
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  tags:
+    - name: iot
+    - name: mqtt
+    - name: event-driven
+
+defaultContentType: application/json
+
+servers:
+  localBroker:
+    host: localhost:1883
+    protocol: mqtt
+    protocolVersion: "5.0"
+    description: |
+      Local EMQX broker running in Docker via `make up`.
+      Plain MQTT over TCP, no TLS.
+
+  renderBroker:
+    host: iot-emqx-broker.onrender.com:443
+    protocol: mqtt
+    protocolVersion: "5.0"
+    description: |
+      Cloud EMQX broker deployed on Render's free tier.
+      MQTT over WebSocket with TLS terminated at the edge.
+      Service may sleep after 15 minutes of inactivity.
+    security:
+      - $ref: '#/components/securitySchemes/anonymous'
+
+channels:
+  temperature:
+    address: iot/sensors/{deviceId}/temperature
+    title: Temperature telemetry
+    description: |
+      Periodic temperature reading from a device.
+      Published with QoS 0. Not retained.
+    parameters:
+      deviceId:
+        description: Unique identifier of the publishing device.
+        examples:
+          - sensor-001
+          - demo-publisher-001
+    messages:
+      sensorReading:
+        $ref: '#/components/messages/SensorReading'
+
+  alert:
+    address: iot/sensors/{deviceId}/alert
+    title: Temperature alert
+    description: |
+      Same payload as the temperature channel, republished when a
+      reading falls outside the configured thresholds.
+      Published with QoS 2. Not retained.
+    parameters:
+      deviceId:
+        description: Unique identifier of the publishing device.
+        examples:
+          - sensor-001
+          - demo-publisher-001
+    messages:
+      sensorReading:
+        $ref: '#/components/messages/SensorReading'
+
+  status:
+    address: iot/sensors/{deviceId}/status
+    title: Device status
+    description: |
+      Operational state of a device. Published with QoS 1 and retained
+      on the broker so that late subscribers receive the last known state.
+    parameters:
+      deviceId:
+        description: Unique identifier of the publishing device.
+        examples:
+          - sensor-001
+          - demo-publisher-001
+    messages:
+      deviceStatus:
+        $ref: '#/components/messages/DeviceStatus'
+
+operations:
+  publishTemperature:
+    action: send
+    channel:
+      $ref: '#/channels/temperature'
+    summary: Publish a temperature reading.
+    description: |
+      Simulated sensors emit readings on a fixed interval. The
+      payload follows the SensorReading schema.
+    traits:
+      - $ref: '#/components/operationTraits/mqtt'
+    messages:
+      - $ref: '#/channels/temperature/messages/sensorReading'
+
+  publishAlert:
+    action: send
+    channel:
+      $ref: '#/channels/alert'
+    summary: Publish an out-of-range alert.
+    description: |
+      Emitted when a reading falls outside the configured thresholds.
+      Uses QoS 2 to guarantee exactly-once delivery.
+    traits:
+      - $ref: '#/components/operationTraits/mqtt'
+    messages:
+      - $ref: '#/channels/alert/messages/sensorReading'
+
+  publishStatus:
+    action: send
+    channel:
+      $ref: '#/channels/status'
+    summary: Publish a device status update.
+    description: |
+      Retained so that new subscribers receive the last known state
+      immediately after subscribing.
+    traits:
+      - $ref: '#/components/operationTraits/mqtt'
+    messages:
+      - $ref: '#/channels/status/messages/deviceStatus'
+
+  receiveTemperature:
+    action: receive
+    channel:
+      $ref: '#/channels/temperature'
+    summary: Receive temperature readings from any device.
+    description: |
+      The central consumer subscribes to
+      `iot/sensors/+/temperature` with QoS 0.
+    traits:
+      - $ref: '#/components/operationTraits/mqtt'
+    messages:
+      - $ref: '#/channels/temperature/messages/sensorReading'
+
+  receiveAlert:
+    action: receive
+    channel:
+      $ref: '#/channels/alert'
+    summary: Receive alert messages from any device.
+    description: |
+      The central consumer subscribes to
+      `iot/sensors/+/alert` with QoS 2.
+    traits:
+      - $ref: '#/components/operationTraits/mqtt'
+    messages:
+      - $ref: '#/channels/alert/messages/sensorReading'
+
+components:
+  securitySchemes:
+    anonymous:
+      type: userPassword
+      description: |
+        The public deployment does not require authentication. The
+        scheme is declared for documentation purposes only.
+
+  operationTraits:
+    mqtt:
+      bindings:
+        mqtt:
+          qos: 0
+          retain: false
+
+  messages:
+    SensorReading:
+      name: SensorReading
+      title: Temperature reading
+      summary: A single temperature measurement.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/SensorReading'
+      examples:
+        - name: typical
+          summary: A normal reading from sensor-001.
+          payload:
+            reading_id: "0f8fad5b-d9cb-469f-a165-70867728950e"
+            device_id: sensor-001
+            temperature_celsius: 22.5
+            timestamp: "2026-09-22T18:00:00+00:00"
+        - name: out_of_range
+          summary: A reading that triggered an alert.
+          payload:
+            reading_id: "58e3969f-154f-400a-b1bc-732b286a255c"
+            device_id: demo-publisher-001
+            temperature_celsius: 14.48
+            timestamp: "2026-09-23T04:33:59+00:00"
+
+    DeviceStatus:
+      name: DeviceStatus
+      title: Device status
+      summary: Operational state of a device.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/DeviceStatus'
+      examples:
+        - name: active
+          summary: A healthy device that is currently publishing.
+          payload:
+            device_id: sensor-001
+            state: active
+
+  schemas:
+    SensorReading:
+      type: object
+      title: SensorReading
+      description: |
+        A single temperature measurement produced by an IoT sensor.
+        This schema mirrors the domain entity `SensorReading` and is
+        the canonical wire contract for both the temperature and alert
+        channels.
+      required:
+        - reading_id
+        - device_id
+        - temperature_celsius
+        - timestamp
+      additionalProperties: false
+      properties:
+        reading_id:
+          type: string
+          format: uuid
+          description: Unique identifier of the reading.
+        device_id:
+          type: string
+          minLength: 1
+          description: Identifier of the publishing device.
+        temperature_celsius:
+          type: number
+          minimum: -100
+          maximum: 100
+          description: Temperature in degrees Celsius.
+        timestamp:
+          type: string
+          format: date-time
+          description: |
+            ISO 8601 timestamp with timezone offset. Produced by the
+            publishing device's clock.
+
+    DeviceStatus:
+      type: object
+      title: DeviceStatus
+      description: |
+        The current operational state of a device. Published on the
+        status channel with QoS 1 and retained on the broker.
+      required:
+        - device_id
+        - state
+      additionalProperties: false
+      properties:
+        device_id:
+          type: string
+          minLength: 1
+          description: Identifier of the device.
+        state:
+          type: string
+          enum:
+            - active
+            - inactive
+            - error
+          description: Operational state.
