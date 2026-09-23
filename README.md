@@ -82,13 +82,19 @@ Both repositories run the same pipeline:
 
 ## Documentation
 
+### Online
+
+- [Landing page](https://jalaulabs.github.io/iot-distributed-event-broker/)
+- [Event API reference (AsyncAPI 3.0)](https://jalaulabs.github.io/iot-distributed-event-broker/api/)
+
+### In the repository
+
 - [Architecture (C4)](docs/architecture.md)
 - [Sequence diagrams](docs/sequence.md)
 - [Render deployment guide](docs/deployment-render.md)
 - [Demo publisher](docs/demo-publisher.md)
-- [Evidence notebook](notebooks/01_mqtt_flow_evidence.ipynb)
-- [AsyncAPI specification](asyncapi.yaml)
 - [AsyncAPI guide](docs/asyncapi.md)
+- [Evidence notebook](notebooks/01_mqtt_flow_evidence.ipynb)
 
 ## Deployment to Render
 
