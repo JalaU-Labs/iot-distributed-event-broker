@@ -45,8 +45,8 @@ class WeatherProviderProtocol(Protocol):
 class MQTTPublisherProtocol(Protocol):
     """Minimal MQTT publishing contract required by the application layer."""
 
-    async def connect(self) -> None:
-        """Open the connection to the broker."""
+    async def connect_with_retry(self) -> None:
+        """Connect with exponential backoff, tolerating a slow broker."""
         ...
 
     async def disconnect(self) -> None:
@@ -110,6 +110,10 @@ class MQTTSubscriberProtocol(Protocol):
 
     async def connect(self) -> None:
         """Open the connection to the broker."""
+        ...
+
+    async def connect_with_retry(self) -> None:
+        """Connect with exponential backoff, tolerating a slow broker."""
         ...
 
     async def disconnect(self) -> None:

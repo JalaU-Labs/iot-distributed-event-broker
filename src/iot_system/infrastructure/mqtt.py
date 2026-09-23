@@ -12,6 +12,7 @@ only the contract it requires (Interface Segregation Principle).
 
 from __future__ import annotations
 
+import asyncio
 import ssl
 from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack
@@ -82,6 +83,47 @@ class AiomqttClient:
             transport=self._config.transport,
             tls=self._config.use_tls,
         )
+
+    async def connect_with_retry(
+        self,
+        *,
+        max_attempts: int = 5,
+        initial_delay_seconds: float = 1.0,
+        max_delay_seconds: float = 30.0,
+    ) -> None:
+        """Attempt to connect with exponential backoff.
+
+        This is essential when the broker is starting up (local Docker) or
+        waking up from inactivity (Render free tier, ~30 s cold start).
+        Raises the last ``MQTTConnectionError`` after exhausting attempts.
+        """
+        delay = initial_delay_seconds
+        last_error: MQTTConnectionError | None = None
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                await self.connect()
+                return
+            except MQTTConnectionError as exc:
+                last_error = exc
+                if attempt == max_attempts:
+                    break
+                logger.warning(
+                    "mqtt.connect_retry",
+                    attempt=attempt,
+                    max_attempts=max_attempts,
+                    delay_seconds=delay,
+                    error=str(exc),
+                )
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, max_delay_seconds)
+
+        assert last_error is not None
+        raise MQTTConnectionError(
+            f"Could not connect to "
+            f"{self._config.broker_host}:{self._config.broker_port} "
+            f"after {max_attempts} attempts"
+        ) from last_error
 
     def _build_tls_context(self) -> ssl.SSLContext:
         """Create a default TLS context that verifies certificates."""

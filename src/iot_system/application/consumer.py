@@ -92,7 +92,7 @@ class SensorConsumer:
             telemetry_topic=self._telemetry_topic,
             alert_topic=self._alert_topic,
         )
-        await self._subscriber.connect()
+        await self._subscriber.connect_with_retry()
         try:
             await self._subscriber.subscribe(self._telemetry_topic, qos=QOS_TELEMETRY)
             await self._subscriber.subscribe(self._alert_topic, qos=QOS_ALERT)

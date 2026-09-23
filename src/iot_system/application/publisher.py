@@ -175,7 +175,7 @@ class SensorPublisher:
             device_id=self._device_id,
             interval_seconds=self._interval,
         )
-        await self._mqtt.connect()
+        await self._mqtt.connect_with_retry()
         try:
             while not stop_event.is_set():
                 try:

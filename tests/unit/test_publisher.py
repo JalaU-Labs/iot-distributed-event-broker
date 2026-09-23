@@ -53,6 +53,9 @@ class _RecordingMQTTPublisher:
     async def connect(self) -> None:
         self.connected = True
 
+    async def connect_with_retry(self) -> None:
+        await self.connect()
+
     async def disconnect(self) -> None:
         self.connected = False
 

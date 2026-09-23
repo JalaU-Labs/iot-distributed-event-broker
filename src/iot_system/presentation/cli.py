@@ -20,6 +20,7 @@ from iot_system.application.consumer import SensorConsumer
 from iot_system.application.publisher import SensorPublisher
 from iot_system.infrastructure.config import get_settings
 from iot_system.infrastructure.logging import configure_logging, get_logger
+from iot_system.infrastructure.mqtt import MQTTConnectionError
 from iot_system.presentation.container import Container
 
 logger = get_logger(__name__)
@@ -72,14 +73,27 @@ async def _run_with_signals(
 def _execute(
     coro_factory: Callable[[asyncio.Event], Awaitable[None]],
 ) -> None:
-    """Run an asyncio coroutine factory, handling Ctrl+C cleanly."""
+    """Run an asyncio coroutine factory, handling Ctrl+C and broker errors."""
 
     async def _runner() -> None:
         stop_event = asyncio.Event()
         await _run_with_signals(coro_factory(stop_event), stop_event)
 
     with suppress(KeyboardInterrupt):
-        asyncio.run(_runner())
+        try:
+            asyncio.run(_runner())
+        except MQTTConnectionError as exc:
+            logger.error(
+                "cli.connection_failed",
+                error=str(exc),
+                hint=(
+                    "Ensure the MQTT broker is reachable. "
+                    "Start the local broker with 'make up', or set "
+                    "MQTT_BROKER_HOST/PORT/TRANSPORT/USE_TLS in .env "
+                    "for the Render deployment."
+                ),
+            )
+            raise typer.Exit(code=1) from exc
 
 
 @publisher_app.callback(invoke_without_command=True)

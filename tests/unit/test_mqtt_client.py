@@ -52,6 +52,7 @@ class MockMQTTClient:
 @pytest.fixture
 def websocket_config() -> MQTTConfig:
     return MQTTConfig(
+        _env_file=None,
         broker_host="test.example.com",
         broker_port=8883,
         transport="websockets",
@@ -63,10 +64,12 @@ def websocket_config() -> MQTTConfig:
 @pytest.fixture
 def tcp_config() -> MQTTConfig:
     return MQTTConfig(
+        _env_file=None,
         broker_host="localhost",
         broker_port=1883,
         transport="tcp",
         use_tls=False,
+        ws_path="",
     )
 
 
@@ -172,3 +175,39 @@ async def test_disconnect_is_idempotent(
     await client.connect()
     await client.disconnect()
     await client.disconnect()  # must not raise
+
+
+async def test_connect_with_retry_succeeds_after_transient_failures(
+    tcp_config: MQTTConfig,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    attempts = {"n": 0}
+
+    def factory(**kwargs: Any) -> MockMQTTClient:
+        attempts["n"] += 1
+        if attempts["n"] < 3:
+            raise OSError("connection refused")
+        return MockMQTTClient(**kwargs)
+
+    monkeypatch.setattr("iot_system.infrastructure.mqtt.aiomqtt.Client", factory)
+    client = AiomqttClient(tcp_config)
+    await client.connect_with_retry(
+        max_attempts=3, initial_delay_seconds=0.01, max_delay_seconds=0.02
+    )
+    assert attempts["n"] == 3
+    await client.disconnect()
+
+
+async def test_connect_with_retry_raises_after_exhausting_attempts(
+    tcp_config: MQTTConfig,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def factory(**kwargs: Any) -> MockMQTTClient:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr("iot_system.infrastructure.mqtt.aiomqtt.Client", factory)
+    client = AiomqttClient(tcp_config)
+    with pytest.raises(MQTTConnectionError, match="after 3 attempts"):
+        await client.connect_with_retry(
+            max_attempts=3, initial_delay_seconds=0.01, max_delay_seconds=0.02
+        )
