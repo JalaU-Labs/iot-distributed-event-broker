@@ -1,5 +1,4 @@
-.PHONY: help up down logs test test-integration test-all lint format typecheck check pre-commit install asyncapi-validate asyncapi-docs clean
-
+.PHONY: help up down logs test test-integration test-all lint format typecheck check pre-commit install asyncapi-validate asyncapi-docs pages-build clean
 help:
 	@echo "Available commands:"
 	@echo "  make up               - Start Docker Compose services"
@@ -17,6 +16,7 @@ help:
 	@echo "  make clean            - Remove caches"
 	@echo "  make asyncapi-validate - Validate the AsyncAPI specification"
 	@echo "  make asyncapi-docs     - Generate HTML documentation for the AsyncAPI spec"
+	@echo "  make pages-build       - Build the GitHub Pages site locally"
 
 up:
 	docker compose up -d --build
@@ -69,3 +69,11 @@ asyncapi-docs:
 	@mkdir -p docs/api
 	npx --yes @asyncapi/cli@latest generate fromTemplate asyncapi.yaml @asyncapi/html-template@latest -o docs/api --force-write
 	@echo "Documentation generated at docs/api/index.html"
+
+pages-build:
+	@command -v npx >/dev/null 2>&1 || { echo "npx not found. Install Node.js."; exit 1; }
+	@rm -rf dist
+	@mkdir -p dist/api
+	npx --yes @asyncapi/cli@3 generate fromTemplate asyncapi.yaml @asyncapi/html-template -o dist/api --force-write
+	@cp docs/pages/index.html dist/index.html
+	@echo "Built at dist/. Open dist/index.html in a browser to preview."
