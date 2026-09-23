@@ -20,6 +20,60 @@ services:
       - ./docker/emqx/emqx.conf:/opt/emqx/etc/emqx.conf:ro
     networks:
       - iot_network
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  publisher:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: iot-publisher
+    hostname: publisher
+    restart: unless-stopped
+    command: ["/app/.venv/bin/iot-publisher"]
+    environment:
+      - TZ=${TZ:-America/Bogota}
+      - MQTT_BROKER_HOST=emqx
+      - MQTT_BROKER_PORT=1883
+      - MQTT_TRANSPORT=tcp
+      - MQTT_USE_TLS=false
+      - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-iot/sensors}
+      - DEVICE_DEVICE_ID=${DEVICE_DEVICE_ID:-sensor-001}
+      - DEVICE_PUBLISH_INTERVAL_SECONDS=${DEVICE_PUBLISH_INTERVAL_SECONDS:-2}
+      - DEVICE_MIN_TEMPERATURE_CELSIUS=${DEVICE_MIN_TEMPERATURE_CELSIUS:-15}
+      - DEVICE_MAX_TEMPERATURE_CELSIUS=${DEVICE_MAX_TEMPERATURE_CELSIUS:-30}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      emqx:
+        condition: service_healthy
+    networks:
+      - iot_network
+
+  consumer:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: iot-consumer
+    hostname: consumer
+    restart: unless-stopped
+    command: ["/app/.venv/bin/iot-consumer"]
+    environment:
+      - TZ=${TZ:-America/Bogota}
+      - MQTT_BROKER_HOST=emqx
+      - MQTT_BROKER_PORT=1883
+      - MQTT_TRANSPORT=tcp
+      - MQTT_USE_TLS=false
+      - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-iot/sensors}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      emqx:
+        condition: service_healthy
+    networks:
+      - iot_network
 
 volumes:
   emqx_data:
