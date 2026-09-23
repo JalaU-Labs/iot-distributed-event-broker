@@ -40,11 +40,11 @@ match. The project pins `@asyncapi/html-template@3.0.0`, which requires
 the new generator (`>=2.0.0`). The CLI flag `--use-new-generator`
 selects it explicitly.
 
-| Template | Generator | CLI flag |
-|---|---|---|
-| `@asyncapi/html-template@2.x` | v1 (default) | none |
-| `@asyncapi/html-template@3.0.0` | v2 | `--use-new-generator` |
-| `@asyncapi/html-template@3.5.x` | v3 | none (requires CLI v5+) |
+| Template                        | Generator    | CLI flag                |
+|---------------------------------|--------------|-------------------------|
+| `@asyncapi/html-template@2.x`   | v1 (default) | none                    |
+| `@asyncapi/html-template@3.0.0` | v2           | `--use-new-generator`   |
+| `@asyncapi/html-template@3.5.x` | v3           | none (requires CLI v5+) |
 
 Pinning a specific template version avoids the pipeline breaking when a
 new template is released with an incompatible generator requirement.
@@ -74,8 +74,8 @@ guards the most important invariants.
 The AsyncAPI HTML documentation is published to GitHub Pages by the
 workflow at `.github/workflows/pages.yml`:
 
-- **Landing page**: https://jalaulabs.github.io/iot-distributed-event-broker/
-- **Event API reference**: https://jalaulabs.github.io/iot-distributed-event-broker/api/
+- **Landing page**: https://jalau-labs.github.io/iot-distributed-event-broker/
+- **Event API reference**: https://jalau-labs.github.io/iot-distributed-event-broker/api/
 
 The workflow triggers on changes to `asyncapi.yaml`, the landing page,
 or the workflow itself. To preview locally, run `make pages-build` and
