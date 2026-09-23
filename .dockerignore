@@ -1,9 +1,14 @@
+# Version control and CI
 .git
 .gitignore
 .github
 .gitlab-ci.yml
+.pre-commit-config.yaml
+
+# Docker build metadata
 .dockerignore
 
+# Python caches and virtualenvs
 .venv
 __pycache__
 **/__pycache__
@@ -13,20 +18,22 @@ __pycache__
 .mypy_cache
 .ruff_cache
 .coverage
+.coverage.*
 htmlcov
+.python-version
 
+# IDE
 .idea
 .vscode
 
+# Not required inside any image
+tests
 notebooks
 docs
-tests
-src
 scripts
-
-README.md
 Makefile
-pyproject.toml
-uv.lock
+render.yaml
+
+# Local environment files (never ship secrets)
 .env
 .env.*
