@@ -87,6 +87,8 @@ Both repositories run the same pipeline:
 - [Render deployment guide](docs/deployment-render.md)
 - [Demo publisher](docs/demo-publisher.md)
 - [Evidence notebook](notebooks/01_mqtt_flow_evidence.ipynb)
+- [AsyncAPI specification](asyncapi.yaml)
+- [AsyncAPI guide](docs/asyncapi.md)
 
 ## Deployment to Render
 
