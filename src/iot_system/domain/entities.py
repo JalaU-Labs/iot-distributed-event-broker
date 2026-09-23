@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 
-class DeviceState(str, Enum):
+class DeviceState(StrEnum):
     """Operational state of an IoT device."""
 
     ACTIVE = "active"
@@ -62,8 +62,7 @@ class SensorReading:
             raise ValueError("device_id must not be empty")
         if not -100.0 <= self.temperature_celsius <= 100.0:
             raise ValueError(
-                f"temperature_celsius must be between -100 and 100, "
-                f"got {self.temperature_celsius}"
+                f"temperature_celsius must be between -100 and 100, got {self.temperature_celsius}"
             )
         if self.timestamp.tzinfo is None:
             raise ValueError("timestamp must be timezone-aware")
