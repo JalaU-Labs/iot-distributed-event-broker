@@ -69,6 +69,17 @@ make test-integration   # integration tests against a running broker
 make pre-commit         # run pre-commit hooks
 ```
 
+## Continuous Integration
+
+Both repositories run the same pipeline:
+
+- **Quality:** `ruff format --check`, `ruff check`, `mypy`
+- **Unit tests:** `pytest -m "not integration"` with coverage gate at 60%
+- **Integration tests:** spin up an ephemeral EMQX container and run `pytest -m integration`
+
+- GitHub Actions: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+- GitLab CI: [`.gitlab-ci.yml`](.gitlab-ci.yml)
+
 ## Documentation
 
 - [Architecture (C4)](docs/architecture.md)
