@@ -54,6 +54,7 @@ class WeatherConfig(BaseSettings):
     cache_ttl_seconds: int = Field(default=300, gt=0)
     request_timeout_seconds: float = Field(default=10.0, gt=0)
     max_retries: int = Field(default=3, ge=0, le=10)
+    initial_retry_wait_seconds: float = Field(default=1.0, gt=0)
 
 
 class DeviceConfig(BaseSettings):
