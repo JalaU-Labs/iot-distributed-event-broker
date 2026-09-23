@@ -3,7 +3,7 @@ name = "iot-distributed-event-platform"
 version = "0.1.0"
 description = "Distributed IoT system with MQTT broker, publisher, and consumer for Week 4 lab"
 readme = "README.md"
-requires-python = ">=3.14.6"
+requires-python = ">=3.14"
 license = { text = "MIT" }
 authors = [
     { name = "Diego Alejandro Botina", email = "alejandro.botina0125@jala.university" }
