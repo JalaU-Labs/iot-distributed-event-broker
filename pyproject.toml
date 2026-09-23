@@ -9,7 +9,7 @@ authors = [
     { name = "Diego Alejandro Botina", email = "alejandro.botina0125@jala.university" }
 ]
 dependencies = [
-    "paho-mqtt>=2.1.0",
+    "aiomqtt>=2.3.0",
     "pydantic-settings>=2.7.0",
     "httpx>=0.28.0",
     "structlog>=24.4.0",
