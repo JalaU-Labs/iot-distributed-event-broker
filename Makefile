@@ -1,7 +1,10 @@
-.PHONY: help up down logs test test-integration test-all lint format typecheck check pre-commit install asyncapi-validate asyncapi-docs pages-build clean
+.PHONY: help up up-broker up-logs down logs ps test test-integration test-all lint format typecheck check pre-commit install asyncapi-validate asyncapi-docs pages-build clean
 help:
 	@echo "Available commands:"
 	@echo "  make up               - Start Docker Compose services"
+	@echo "  make up-broker   - Start only the MQTT broker"
+	@echo "  make up-logs     - Follow publisher and consumer logs"
+	@echo "  make ps          - Show service status"
 	@echo "  make down             - Stop Docker Compose services"
 	@echo "  make logs             - Show Docker Compose logs"
 	@echo "  make test             - Run unit tests with coverage"
@@ -20,6 +23,15 @@ help:
 
 up:
 	docker compose up -d --build
+
+up-broker:
+	docker compose up -d --build emqx
+
+up-logs:
+	docker compose logs -f publisher consumer
+
+ps:
+	docker compose ps
 
 down:
 	docker compose down
