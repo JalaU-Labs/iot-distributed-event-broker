@@ -114,7 +114,7 @@ class OpenMeteoWeatherProvider:
                     data = response.json()
         except httpx.HTTPError as exc:
             raise WeatherProviderError(
-                f"Failed to fetch weather after " f"{self._config.max_retries + 1} attempts: {exc}"
+                f"Failed to fetch weather after {self._config.max_retries + 1} attempts: {exc}"
             ) from exc
 
         current = data.get("current", {})
