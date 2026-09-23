@@ -1,4 +1,4 @@
-.PHONY: help up down logs test lint format typecheck check pre-commit install clean
+.PHONY: help up down logs test test-integration test-all lint format typecheck check pre-commit install asyncapi-validate asyncapi-docs clean
 
 help:
 	@echo "Available commands:"
@@ -15,6 +15,8 @@ help:
 	@echo "  make pre-commit       - Run pre-commit hooks"
 	@echo "  make install          - Install pre-commit hooks"
 	@echo "  make clean            - Remove caches"
+	@echo "  make asyncapi-validate - Validate the AsyncAPI specification"
+	@echo "  make asyncapi-docs     - Generate HTML documentation for the AsyncAPI spec"
 
 up:
 	docker compose up -d --build
@@ -58,3 +60,12 @@ install:
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage
+
+asyncapi-validate:
+	uv run pytest tests/unit/test_asyncapi_spec.py -v --no-cov
+
+asyncapi-docs:
+	@command -v npx >/dev/null 2>&1 || { echo "npx not found. Install Node.js to generate AsyncAPI docs."; exit 1; }
+	@mkdir -p docs/api
+	npx --yes @asyncapi/cli@latest generate fromTemplate asyncapi.yaml @asyncapi/html-template@latest -o docs/api --force-write
+	@echo "Documentation generated at docs/api/index.html"
