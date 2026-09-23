@@ -6,6 +6,7 @@ serializers. It depends on the domain layer, never the other way around.
 """
 
 from iot_system.infrastructure.cache import TTLCache
+from iot_system.infrastructure.clock import SystemClock
 from iot_system.infrastructure.config import (
     DeviceConfig,
     LoggingConfig,
@@ -35,6 +36,7 @@ __all__ = [
     "OpenMeteoWeatherProvider",
     "SerializationError",
     "Settings",
+    "SystemClock",
     "TTLCache",
     "WeatherConfig",
     "WeatherProviderError",
