@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import signal
+import sys
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from typing import Annotated
@@ -79,21 +80,23 @@ def _execute(
         stop_event = asyncio.Event()
         await _run_with_signals(coro_factory(stop_event), stop_event)
 
-    with suppress(KeyboardInterrupt):
-        try:
-            asyncio.run(_runner())
-        except MQTTConnectionError as exc:
-            logger.error(
-                "cli.connection_failed",
-                error=str(exc),
-                hint=(
-                    "Ensure the MQTT broker is reachable. "
-                    "Start the local broker with 'make up', or set "
-                    "MQTT_BROKER_HOST/PORT/TRANSPORT/USE_TLS in .env "
-                    "for the Render deployment."
-                ),
-            )
-            raise typer.Exit(code=1) from exc
+    try:
+        asyncio.run(_runner())
+    except KeyboardInterrupt:
+        # User pressed Ctrl+C; exit code 130 is the convention for SIGINT.
+        sys.exit(130)
+    except MQTTConnectionError as exc:
+        logger.error(
+            "cli.connection_failed",
+            error=str(exc),
+            hint=(
+                "Ensure the MQTT broker is reachable. "
+                "Start the local broker with 'make up', or set "
+                "MQTT_BROKER_HOST/PORT/TRANSPORT/USE_TLS/WS_PATH in .env "
+                "for a cloud deployment."
+            ),
+        )
+        sys.exit(1)
 
 
 @publisher_app.callback(invoke_without_command=True)
