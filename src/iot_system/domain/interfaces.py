@@ -77,3 +77,17 @@ class SerializerProtocol(Protocol):
     def decode(self, payload: bytes) -> SensorReading:
         """Deserialize bytes into a SensorReading."""
         ...
+
+
+@runtime_checkable
+class RandomProtocol(Protocol):
+    """Minimal source of randomness required by the publisher.
+
+    Narrowing the dependency to the single method the application actually
+    uses keeps the contract honest (Interface Segregation Principle) and
+    allows deterministic fakes in tests without subclassing ``random.Random``.
+    """
+
+    def uniform(self, a: float, b: float) -> float:
+        """Return a random float N such that a <= N <= b."""
+        ...
