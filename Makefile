@@ -74,6 +74,6 @@ pages-build:
 	@command -v npx >/dev/null 2>&1 || { echo "npx not found. Install Node.js."; exit 1; }
 	@rm -rf dist
 	@mkdir -p dist/api
-	npx --yes @asyncapi/cli@3 generate fromTemplate asyncapi.yaml @asyncapi/html-template -o dist/api --force-write
+	npx --yes @asyncapi/cli@3 generate fromTemplate asyncapi.yaml @asyncapi/html-template@3.0.0 -o dist/api --force-write --use-new-generator
 	@cp docs/pages/index.html dist/index.html
 	@echo "Built at dist/. Open dist/index.html in a browser to preview."
