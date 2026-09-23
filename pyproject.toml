@@ -18,8 +18,8 @@ dependencies = [
 ]
 
 [project.scripts]
-iot-publisher = "iot_system.presentation.cli:publisher"
-iot-consumer = "iot_system.presentation.cli:consumer"
+iot-publisher = "iot_system.presentation.cli:run_publisher"
+iot-consumer = "iot_system.presentation.cli:run_consumer"
 
 [build-system]
 requires = ["hatchling"]

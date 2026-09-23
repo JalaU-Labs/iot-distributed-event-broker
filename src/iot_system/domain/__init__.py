@@ -11,7 +11,9 @@ from iot_system.domain.entities import (
 )
 from iot_system.domain.interfaces import (
     ClockProtocol,
+    IncomingMessage,
     MQTTPublisherProtocol,
+    MQTTSubscriberProtocol,
     RandomProtocol,
     SerializerProtocol,
     WeatherProviderProtocol,
@@ -20,7 +22,9 @@ from iot_system.domain.interfaces import (
 __all__ = [
     "ClockProtocol",
     "DeviceState",
+    "IncomingMessage",
     "MQTTPublisherProtocol",
+    "MQTTSubscriberProtocol",
     "RandomProtocol",
     "SensorReading",
     "SerializerProtocol",

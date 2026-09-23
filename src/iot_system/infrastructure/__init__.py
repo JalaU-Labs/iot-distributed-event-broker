@@ -16,7 +16,7 @@ from iot_system.infrastructure.config import (
     get_settings,
 )
 from iot_system.infrastructure.logging import configure_logging, get_logger
-from iot_system.infrastructure.mqtt import AiomqttPublisher, MQTTConnectionError
+from iot_system.infrastructure.mqtt import AiomqttClient, MQTTConnectionError
 from iot_system.infrastructure.serialization import (
     JsonSensorReadingSerializer,
     SerializationError,
@@ -27,7 +27,7 @@ from iot_system.infrastructure.weather import (
 )
 
 __all__ = [
-    "AiomqttPublisher",
+    "AiomqttClient",
     "DeviceConfig",
     "JsonSensorReadingSerializer",
     "LoggingConfig",

@@ -11,6 +11,8 @@ simplifies testing and decoupling.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
@@ -90,4 +92,34 @@ class RandomProtocol(Protocol):
 
     def uniform(self, a: float, b: float) -> float:
         """Return a random float N such that a <= N <= b."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class IncomingMessage:
+    """A message received from the MQTT broker."""
+
+    topic: str
+    payload: bytes
+    qos: int
+
+
+@runtime_checkable
+class MQTTSubscriberProtocol(Protocol):
+    """Minimal MQTT subscription contract required by the application layer."""
+
+    async def connect(self) -> None:
+        """Open the connection to the broker."""
+        ...
+
+    async def disconnect(self) -> None:
+        """Close the connection to the broker gracefully."""
+        ...
+
+    async def subscribe(self, topic: str, qos: int) -> None:
+        """Subscribe to a topic at the given QoS level."""
+        ...
+
+    def messages(self) -> AsyncIterator[IncomingMessage]:
+        """Yield incoming messages until the connection is closed."""
         ...

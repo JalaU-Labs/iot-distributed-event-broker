@@ -5,6 +5,7 @@ adapters. This keeps the use cases testable in isolation and lets the
 infrastructure layer evolve without touching business rules.
 """
 
+from iot_system.application.consumer import ConsumerStats, SensorConsumer
 from iot_system.application.publisher import (
     QOS_ALERT,
     QOS_STATUS,
@@ -17,6 +18,8 @@ __all__ = [
     "QOS_ALERT",
     "QOS_STATUS",
     "QOS_TELEMETRY",
+    "ConsumerStats",
+    "SensorConsumer",
     "SensorPublisher",
     "TopicFactory",
 ]

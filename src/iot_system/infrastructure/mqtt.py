@@ -1,20 +1,24 @@
-"""MQTT publisher adapter backed by aiomqtt.
+"""MQTT client adapter backed by aiomqtt.
 
-Wraps aiomqtt.Client with lifecycle management (connect/disconnect) and a
-narrow publishing API. Supports both plain TCP (local Docker broker) and
-WebSocket transport with TLS (Render broker).
+Wraps aiomqtt.Client with lifecycle management (connect/disconnect),
+publishing, and subscription. Supports both plain TCP (local Docker broker)
+and WebSocket transport with TLS (Render broker).
 
-Only the operations required by the application layer are exposed; the
-adapter implements MQTTPublisherProtocol structurally.
+The class implements MQTTPublisherProtocol and MQTTSubscriberProtocol
+structurally. Consumers that only need to publish receive a reference
+typed as the publisher protocol, and vice versa, so each use case sees
+only the contract it requires (Interface Segregation Principle).
 """
 
 from __future__ import annotations
 
 import ssl
+from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack
 
 import aiomqtt
 
+from iot_system.domain.interfaces import IncomingMessage
 from iot_system.infrastructure.config import MQTTConfig
 from iot_system.infrastructure.logging import get_logger
 
@@ -22,15 +26,15 @@ logger = get_logger(__name__)
 
 
 class MQTTConnectionError(RuntimeError):
-    """Raised when the MQTT client cannot connect or publish."""
+    """Raised when the MQTT client cannot connect, publish, or subscribe."""
 
 
-class AiomqttPublisher:
-    """Async MQTT publisher.
+class AiomqttClient:
+    """Async MQTT client supporting publish and subscribe operations.
 
-    The connection is opened lazily by ``connect`` and closed by
-    ``disconnect``. The instance is not safe to share across event loops;
-    each process should create its own publisher.
+    The connection is opened by ``connect`` and closed by ``disconnect``.
+    The instance is not safe to share across event loops; each process
+    should create its own client.
     """
 
     def __init__(self, config: MQTTConfig) -> None:
@@ -80,12 +84,7 @@ class AiomqttPublisher:
         )
 
     def _build_tls_context(self) -> ssl.SSLContext:
-        """Create a default TLS context.
-
-        Render terminates TLS at the edge with a valid certificate chain, so
-        the default context (which verifies certificates and hostnames) is
-        sufficient.
-        """
+        """Create a default TLS context that verifies certificates."""
         return ssl.create_default_context()
 
     async def disconnect(self) -> None:
@@ -115,7 +114,6 @@ class AiomqttPublisher:
         try:
             await self._client.publish(topic, payload, qos=qos, retain=retain)
         except aiomqtt.MqttError as exc:
-            # The connection is no longer usable; force a reconnect on next use.
             self._client = None
             raise MQTTConnectionError(f"Publish to {topic!r} failed: {exc}") from exc
 
@@ -126,3 +124,36 @@ class AiomqttPublisher:
             retain=retain,
             payload_size=len(payload),
         )
+
+    async def subscribe(self, topic: str, qos: int) -> None:
+        """Subscribe to the given topic at the specified QoS level.
+
+        Raises:
+            MQTTConnectionError: if the client is not connected, or if the
+                broker rejects the subscription.
+        """
+        if self._client is None:
+            raise MQTTConnectionError("Not connected. Call connect() before subscribe().")
+
+        try:
+            await self._client.subscribe(topic, qos=qos)
+        except aiomqtt.MqttError as exc:
+            raise MQTTConnectionError(f"Subscribe to {topic!r} failed: {exc}") from exc
+
+        logger.info("mqtt.subscribed", topic=topic, qos=qos)
+
+    async def messages(self) -> AsyncIterator[IncomingMessage]:
+        """Yield incoming messages until the connection is closed.
+
+        Raises:
+            MQTTConnectionError: if the client is not connected.
+        """
+        if self._client is None:
+            raise MQTTConnectionError("Not connected. Call connect() before consuming.")
+
+        async for message in self._client.messages:
+            yield IncomingMessage(
+                topic=str(message.topic),
+                payload=bytes(message.payload),
+                qos=int(message.qos),
+            )
