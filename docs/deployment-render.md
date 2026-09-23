@@ -125,6 +125,35 @@ sequenceDiagram
 
 ## Troubleshooting
 
+### WebSocket upgrade returns 200 instead of 101
+
+Caddy 2 interprets `http://0.0.0.0:<port>` in a site address as a **Host header matcher**, not as a bind directive. This produces a warning at startup and breaks WebSocket upgrades because the Host sent by Render's edge never matches `0.0.0.0`.
+
+Always use the bare `:<port>` form in the Caddyfile:
+
+```caddyfile
+:{$PORT} {
+    ...
+}
+```
+
+If the warning reappears, add `bind 0.0.0.0` explicitly inside the site block.
+
+To verify a WebSocket handshake correctly, force HTTP/1.1 in curl. HTTP/2 silently drops the `Connection` and `Upgrade` headers:
+
+```bash
+curl --http1.1 -i -N \
+  -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
+  -H "Sec-WebSocket-Protocol: mqtt" \
+  --max-time 10 \
+  "https://iot-emqx-broker.onrender.com/mqtt"
+```
+
+Expected: `HTTP/1.1 101 Switching Protocols`.
+
 ### Service stuck in "In Progress"
 
 1. Check that Caddy's admin API is disabled (`admin off` in `Caddyfile`). If enabled, it binds to port 2019 and Render's port scanner can confuse it with the actual service port.
