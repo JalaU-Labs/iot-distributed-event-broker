@@ -15,6 +15,7 @@ dependencies = [
     "structlog>=24.4.0",
     "tenacity>=9.0.0",
     "typer>=0.15.0",
+    "ipykernel>=7.3.0",
 ]
 
 [project.scripts]
@@ -63,6 +64,9 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra -q --cov=src/iot_system --cov-report=term-missing --cov-fail-under=60"
+addopts = "-ra -q --cov=src/iot_system --cov-report=term-missing --cov-fail-under=60 -m 'not integration'"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: requires a running MQTT broker (deselect with '-m \"not integration\"')",
+]

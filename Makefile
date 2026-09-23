@@ -2,17 +2,19 @@
 
 help:
 	@echo "Available commands:"
-	@echo "  make up          - Start Docker Compose services"
-	@echo "  make down        - Stop Docker Compose services"
-	@echo "  make logs        - Show Docker Compose logs"
-	@echo "  make test        - Run tests with coverage"
-	@echo "  make lint        - Run ruff and mypy"
-	@echo "  make format      - Format code with ruff"
-	@echo "  make typecheck   - Run mypy"
-	@echo "  make check       - Run lint and tests without modifying files"
-	@echo "  make pre-commit  - Run pre-commit hooks"
-	@echo "  make install     - Install pre-commit hooks"
-	@echo "  make clean       - Remove caches"
+	@echo "  make up               - Start Docker Compose services"
+	@echo "  make down             - Stop Docker Compose services"
+	@echo "  make logs             - Show Docker Compose logs"
+	@echo "  make test             - Run unit tests with coverage"
+	@echo "  make test-integration - Run integration tests (requires broker)"
+	@echo "  make test-all         - Run all tests without coverage"
+	@echo "  make lint             - Run ruff and mypy"
+	@echo "  make format           - Format code with ruff"
+	@echo "  make typecheck        - Run mypy"
+	@echo "  make check            - Run format check, lint, types and tests"
+	@echo "  make pre-commit       - Run pre-commit hooks"
+	@echo "  make install          - Install pre-commit hooks"
+	@echo "  make clean            - Remove caches"
 
 up:
 	docker compose up -d --build
@@ -25,6 +27,12 @@ logs:
 
 test:
 	uv run pytest
+
+test-integration:
+	uv run pytest -m integration --no-cov
+
+test-all:
+	uv run pytest -m "" --no-cov
 
 lint:
 	uv run ruff check .
