@@ -20,10 +20,11 @@ import typer
 
 from iot_system.application.consumer import SensorConsumer
 from iot_system.application.publisher import SensorPublisher
-from iot_system.infrastructure.config import get_settings
+from iot_system.infrastructure.config import Settings, get_settings
 from iot_system.infrastructure.health_server import HealthServer
 from iot_system.infrastructure.logging import configure_logging, get_logger
 from iot_system.infrastructure.mqtt import MQTTConnectionError
+from iot_system.infrastructure.wakeup import BrokerWakeUpWaiter
 from iot_system.presentation.container import Container
 
 logger = get_logger(__name__)
@@ -81,17 +82,30 @@ async def _run_with_signals(
 
 def _execute(
     coro_factory: Callable[[asyncio.Event], Awaitable[None]],
+    settings: Settings,
 ) -> None:
     """Run an asyncio coroutine factory, handling Ctrl+C and broker errors."""
 
     async def _runner() -> None:
         stop_event = asyncio.Event()
+        async with BrokerWakeUpWaiter(settings.wakeup) as waiter:
+            if not await waiter.wait_until_ready():
+                logger.error(
+                    "cli.wakeup_timeout",
+                    url=settings.wakeup.url,
+                    timeout_seconds=settings.wakeup.timeout_seconds,
+                    hint=(
+                        "The demo publisher did not respond. "
+                        "Check https://iot-demo-publisher.onrender.com/health "
+                        "in your browser or disable WAKEUP_ENABLED."
+                    ),
+                )
+                sys.exit(1)
         await _run_with_signals(coro_factory(stop_event), stop_event)
 
     try:
         asyncio.run(_runner())
     except KeyboardInterrupt:
-        # User pressed Ctrl+C; exit code 130 is the convention for SIGINT.
         sys.exit(130)
     except MQTTConnectionError as exc:
         logger.error(
@@ -130,7 +144,7 @@ def run_publisher(
         transport=settings.mqtt.transport,
     )
     publisher: SensorPublisher = Container(settings).build_publisher()
-    _execute(lambda stop_event: publisher.run_forever(stop_event))
+    _execute(lambda stop_event: publisher.run_forever(stop_event), settings)
 
 
 @consumer_app.callback(invoke_without_command=True)
@@ -145,7 +159,7 @@ def run_consumer() -> None:
         topic_prefix=settings.mqtt.topic_prefix,
     )
     consumer: SensorConsumer = Container(settings).build_consumer()
-    _execute(lambda stop_event: consumer.run_forever(stop_event))
+    _execute(lambda stop_event: consumer.run_forever(stop_event), settings)
 
 
 @demo_publisher_app.callback(invoke_without_command=True)
@@ -177,7 +191,7 @@ def run_demo_publisher() -> None:
         finally:
             await health.stop()
 
-    _execute(_run)
+    _execute(_run, settings)
 
 
 # Root CLI that groups both commands for ad-hoc usage: `python -m ... publisher`.
