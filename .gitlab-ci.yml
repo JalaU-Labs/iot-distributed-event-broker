@@ -1,0 +1,56 @@
+stages:
+  - quality
+  - test
+
+default:
+  image: ghcr.io/astral-sh/uv:python3.14-bookworm-slim
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .venv/
+
+variables:
+  UV_LINK_MODE: copy
+  UV_CACHE_DIR: .uv-cache
+  MQTT_TRANSPORT: tcp
+  MQTT_USE_TLS: "false"
+
+.uv-setup:
+  before_script:
+    - uv sync --frozen --all-groups
+
+quality:
+  stage: quality
+  extends: .uv-setup
+  script:
+    - uv run ruff format --check .
+    - uv run ruff check .
+    - uv run mypy src tests
+
+test-unit:
+  stage: test
+  extends: .uv-setup
+  script:
+    - uv run pytest -m "not integration"
+
+test-integration:
+  stage: test
+  extends: .uv-setup
+  services:
+    - name: emqx/emqx:5.8.0
+      alias: emqx
+  variables:
+    MQTT_BROKER_HOST: emqx
+    MQTT_BROKER_PORT: "1883"
+  script:
+    - |
+      for i in $(seq 1 30); do
+        if uv run python -c "import socket; socket.create_connection(('emqx', 1883), timeout=1).close()" 2>/dev/null; then
+          echo "Broker ready"
+          break
+        fi
+        sleep 1
+      done
+    - uv run pytest -m integration --no-cov
