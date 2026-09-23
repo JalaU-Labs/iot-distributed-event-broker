@@ -134,3 +134,7 @@ dmypy.json
 
 # Docker
 *.pid
+
+# GitHub Pages output
+/dist/
+/docs/api/
