@@ -35,8 +35,8 @@ jobs:
         run: |
           mkdir -p dist/api
           npx --yes @asyncapi/cli@3 generate fromTemplate \
-              asyncapi.yaml @asyncapi/html-template \
-              -o dist/api --force-write
+              asyncapi.yaml @asyncapi/html-template@3.0.0 \
+              -o dist/api --force-write --use-new-generator
 
       - name: Copy landing page
         run: cp docs/pages/index.html dist/index.html
