@@ -118,6 +118,28 @@ class LoggingConfig(BaseSettings):
     json_format: bool = False
 
 
+class WakeUpConfig(BaseSettings):
+    """Wait for an external readiness endpoint before connecting.
+
+    Used in cloud deployments to give a sleeping broker time to wake up.
+    When ``enabled`` is false (the default), the waiter is bypassed and
+    connections are attempted immediately.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="WAKEUP_",
+        env_file=_ENV_FILE,
+        env_file_encoding=_ENV_FILE_ENCODING,
+        extra="ignore",
+    )
+
+    enabled: bool = False
+    url: str = ""
+    timeout_seconds: float = Field(default=180.0, gt=0)
+    interval_seconds: float = Field(default=5.0, gt=0)
+    request_timeout_seconds: float = Field(default=10.0, gt=0)
+
+
 class Settings(BaseSettings):
     """Root settings aggregating all configuration sections.
 
@@ -137,6 +159,7 @@ class Settings(BaseSettings):
     weather: WeatherConfig = Field(default_factory=WeatherConfig)
     device: DeviceConfig = Field(default_factory=DeviceConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    wakeup: WakeUpConfig = Field(default_factory=WakeUpConfig)
 
 
 @lru_cache(maxsize=1)
