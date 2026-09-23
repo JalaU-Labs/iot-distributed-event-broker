@@ -14,6 +14,7 @@ default:
 variables:
   UV_LINK_MODE: copy
   UV_CACHE_DIR: .uv-cache
+  UV_PYTHON: "3.14"
   MQTT_TRANSPORT: tcp
   MQTT_USE_TLS: "false"
 
