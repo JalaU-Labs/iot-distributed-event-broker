@@ -53,8 +53,29 @@ The Python domain entity `SensorReading` in
 with the schemas. The test `test_asyncapi_schemas_match_domain_contract`
 guards the most important invariants.
 
+## Published documentation
+
+The AsyncAPI HTML documentation is published to GitHub Pages by the
+workflow at `.github/workflows/pages.yml`:
+
+- **Landing page**: https://jalaulabs.github.io/iot-distributed-event-broker/
+- **Event API reference**: https://jalaulabs.github.io/iot-distributed-event-broker/api/
+
+The workflow triggers on changes to `asyncapi.yaml`, the landing page,
+or the workflow itself. To preview locally, run `make pages-build` and
+open `dist/index.html` in a browser.
+
+### One-time setup
+
+After the first push, enable GitHub Pages in the repository settings:
+
+1. Go to **Settings** → **Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. The next push to `main` will deploy automatically.
+
 ## References
 
 - [AsyncAPI 3.0 Specification](https://www.asyncapi.com/docs/reference/specification/v3.0.0)
 - [MQTT bindings for AsyncAPI](https://github.com/asyncapi/bindings/tree/master/mqtt)
 - [AsyncAPI CLI](https://github.com/asyncapi/cli)
+- [GitHub Pages via Actions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow)
