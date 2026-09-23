@@ -88,7 +88,7 @@ async def test_concurrent_get_or_set_shares_single_call() -> None:
         cache.get_or_set("k", factory),
         cache.get_or_set("k", factory),
     )
-    assert results == (99, 99, 99)
+    assert list(results) == [99, 99, 99]
     assert calls == 1
 
 
