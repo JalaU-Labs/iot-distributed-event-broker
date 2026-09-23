@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Distributed Event Platform</title>
+  <meta name="description" content="AsyncAPI documentation and connection guide for the IoT Distributed Event Platform running on Render.">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-hover: #1f242c;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --success: #3fb950;
+      --code-bg: #0d1117;
+      --code-border: #30363d;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f6f8fa;
+        --surface-hover: #eaeef2;
+        --border: #d0d7de;
+        --text: #1f2328;
+        --text-muted: #656d76;
+        --accent: #0969da;
+        --accent-hover: #0550ae;
+        --success: #1a7f37;
+        --code-bg: #f6f8fa;
+        --code-border: #d0d7de;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 6rem;
+    }
+
+    header { margin-bottom: 3rem; }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.125rem;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 1.375rem;
+      font-weight: 600;
+      margin: 3rem 0 1rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    p { margin: 0 0 1rem; }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .card {
+      display: block;
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .card:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      text-decoration: none;
+      transform: translateY(-2px);
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 1.0625rem;
+      color: var(--accent);
+      margin: 0 0 0.375rem;
+    }
+
+    .card-description {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin: 0;
+    }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.875rem;
+    }
+
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 4px;
+      padding: 0.125rem 0.375rem;
+      color: var(--text);
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      line-height: 1.55;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9375rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.625rem 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 20%, transparent);
+    }
+
+    .note {
+      padding: 1rem 1.25rem;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin: 1rem 0;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>IoT Distributed Event Platform</h1>
+      <p class="subtitle">
+        Event-driven IoT system built on MQTT. A simulated sensor publishes
+        temperature readings; a central consumer subscribes and processes
+        them, with differentiated QoS levels per channel.
+      </p>
+      <div class="status">
+        <span class="status-dot"></span>
+        <span>Broker deployed on Render &middot; free tier</span>
+      </div>
+    </header>
+
+    <h2>Documentation</h2>
+    <div class="cards">
+      <a class="card" href="./api/">
+        <p class="card-title">Event API Reference</p>
+        <p class="card-description">
+          AsyncAPI 3.0 specification rendered as HTML: channels, messages,
+          schemas, and QoS semantics.
+        </p>
+      </a>
+      <a class="card" href="https://github.com/JalaU-Labs/iot-distributed-event-broker">
+        <p class="card-title">Source Repository</p>
+        <p class="card-description">
+          Full implementation in Python 3.14 with layered architecture,
+          SOLID principles, and reproducible Docker deployment.
+        </p>
+      </a>
+      <a class="card" href="./api/#/servers">
+        <p class="card-title">Broker Connection Info</p>
+        <p class="card-description">
+          Hostname, port, transport, and TLS settings for connecting any
+          MQTT client to the live broker.
+        </p>
+      </a>
+    </div>
+
+    <h2>Connect to the live broker</h2>
+    <p>
+      The broker speaks MQTT over WebSocket with TLS. Any MQTT client that
+      supports this transport can connect using the following settings:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Setting</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Host</td>
+          <td><code>iot-emqx-broker.onrender.com</code></td>
+        </tr>
+        <tr>
+          <td>Port</td>
+          <td><code>443</code></td>
+        </tr>
+        <tr>
+          <td>Transport</td>
+          <td><code>websockets</code></td>
+        </tr>
+        <tr>
+          <td>TLS</td>
+          <td>Enabled (terminated at the edge)</td>
+        </tr>
+        <tr>
+          <td>WebSocket path</td>
+          <td><code>/mqtt</code></td>
+        </tr>
+        <tr>
+          <td>Authentication</td>
+          <td>None</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Subscribe to the demo stream</h2>
+    <p>
+      A low-frequency publisher (<code>demo-publisher-001</code>) emits one
+      reading every 30 seconds to keep the free-tier broker awake. Use
+      <code>mosquitto_sub</code> to observe the stream:
+    </p>
+
+    <pre><code>mosquitto_sub \
+    -h iot-emqx-broker.onrender.com \
+    -p 443 \
+    --ws-path /mqtt \
+    -t 'iot/sensors/demo-publisher-001/#' \
+    -v</code></pre>
+
+    <p>Or with the Python client included in this project:</p>
+
+    <pre><code>git clone https://github.com/JalaU-Labs/iot-distributed-event-broker
+cd iot-distributed-event-broker
+uv sync
+MQTT_BROKER_HOST=iot-emqx-broker.onrender.com \
+MQTT_BROKER_PORT=443 \
+MQTT_TRANSPORT=websockets \
+MQTT_USE_TLS=true \
+MQTT_WS_PATH=/mqtt \
+uv run iot-consumer</code></pre>
+
+    <h2>Topics</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th>QoS</th>
+          <th>Retained</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>iot/sensors/&lt;device&gt;/temperature</code></td>
+          <td>0</td>
+          <td>No</td>
+          <td>Periodic telemetry</td>
+        </tr>
+        <tr>
+          <td><code>iot/sensors/&lt;device&gt;/alert</code></td>
+          <td>2</td>
+          <td>No</td>
+          <td>Out-of-range alerts</td>
+        </tr>
+        <tr>
+          <td><code>iot/sensors/&lt;device&gt;/status</code></td>
+          <td>1</td>
+          <td>Yes</td>
+          <td>Device state</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Usage notes</h2>
+    <div class="note">
+      <strong>Best-effort service.</strong> The broker runs on Render's free
+      tier. It sleeps after 15 minutes of inactivity and cold-starts in
+      approximately 30 seconds. There is no SLA, no authentication, and no
+      message persistence. Topics are shared by all users of this instance.
+      Please use it for evaluation and learning purposes only.
+    </div>
+
+    <footer>
+      <p>
+        Licensed under the
+        <a href="https://github.com/JalaU-Labs/iot-distributed-event-broker/blob/main/LICENSE">MIT License</a>.
+        Built for the Redes de Computadoras 2 course at
+        <a href="https://www.jala.university/">Jala University</a>.
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
