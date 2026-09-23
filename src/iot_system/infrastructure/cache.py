@@ -14,21 +14,17 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from time import monotonic
-from typing import Generic, TypeVar
-
-K = TypeVar("K")
-V = TypeVar("V")
 
 
 @dataclass(slots=True)
-class _Entry(Generic[V]):
+class _Entry[V]:
     """Internal cache entry with expiration metadata."""
 
     value: V
     expires_at: float
 
 
-class TTLCache(Generic[K, V]):
+class TTLCache[K, V]:
     """In-memory cache with time-to-live per entry and per-key locking.
 
     Args:
