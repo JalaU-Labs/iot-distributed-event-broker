@@ -15,12 +15,12 @@ dependencies = [
     "structlog>=24.4.0",
     "tenacity>=9.0.0",
     "typer>=0.15.0",
-    "ipykernel>=7.3.0",
 ]
 
 [project.scripts]
 iot-publisher = "iot_system.presentation.cli:run_publisher"
 iot-consumer = "iot_system.presentation.cli:run_consumer"
+iot-demo-publisher = "iot_system.presentation.cli:run_demo_publisher"
 
 [build-system]
 requires = ["hatchling"]
@@ -31,12 +31,13 @@ packages = ["src/iot_system"]
 
 [dependency-groups]
 dev = [
+    "ipykernel>=7.3.0",
+    "mypy>=1.14.0",
+    "pre-commit>=4.0.0",
     "pytest>=8.3.0",
     "pytest-asyncio>=0.25.0",
     "pytest-cov>=6.0.0",
     "ruff>=0.8.0",
-    "mypy>=1.14.0",
-    "pre-commit>=4.0.0",
 ]
 
 [tool.ruff]

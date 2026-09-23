@@ -410,7 +410,6 @@ source = { editable = "." }
 dependencies = [
     { name = "aiomqtt" },
     { name = "httpx" },
-    { name = "ipykernel" },
     { name = "pydantic-settings" },
     { name = "structlog" },
     { name = "tenacity" },
@@ -419,6 +418,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "ipykernel" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -431,7 +431,6 @@ dev = [
 requires-dist = [
     { name = "aiomqtt", specifier = ">=2.3.0" },
     { name = "httpx", specifier = ">=0.28.0" },
-    { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "pydantic-settings", specifier = ">=2.7.0" },
     { name = "structlog", specifier = ">=24.4.0" },
     { name = "tenacity", specifier = ">=9.0.0" },
@@ -440,6 +439,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "mypy", specifier = ">=1.14.0" },
     { name = "pre-commit", specifier = ">=4.0.0" },
     { name = "pytest", specifier = ">=8.3.0" },
