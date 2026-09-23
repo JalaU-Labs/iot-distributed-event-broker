@@ -3,7 +3,7 @@
 	auto_https off
 }
 
-http://0.0.0.0:{$PORT} {
+:{$PORT} {
 	handle /health {
 		respond "OK" 200
 	}
