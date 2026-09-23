@@ -1,3 +1,16 @@
+# Common environment shared by the containerised publisher and consumer.
+# Both containers talk to the broker through the internal Docker network
+# (`emqx:1883`), regardless of the MQTT_BROKER_HOST value in `.env`. That
+# variable only affects the CLI when it runs from the host.
+x-app-environment: &app-environment
+  TZ: "${TZ:-America/Bogota}"
+  MQTT_BROKER_HOST: "emqx"
+  MQTT_BROKER_PORT: "1883"
+  MQTT_TRANSPORT: "tcp"
+  MQTT_USE_TLS: "false"
+  MQTT_TOPIC_PREFIX: "${MQTT_TOPIC_PREFIX:-iot/sensors}"
+  LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+
 services:
   emqx:
     build:
@@ -7,9 +20,9 @@ services:
     hostname: emqx
     restart: unless-stopped
     environment:
-      - TZ=${TZ:-America/Bogota}
-      - EMQX_DASHBOARD__DEFAULT_USERNAME=${EMQX_DASHBOARD_USER:-admin}
-      - EMQX_DASHBOARD__DEFAULT_PASSWORD=${EMQX_DASHBOARD_PASSWORD:-public}
+      TZ: "${TZ:-America/Bogota}"
+      EMQX_DASHBOARD__DEFAULT_USERNAME: "${EMQX_DASHBOARD_USER:-admin}"
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: "${EMQX_DASHBOARD_PASSWORD:-public}"
     ports:
       - "${MQTT_TCP_PORT:-1883}:1883"
       - "${MQTT_WS_PORT:-8083}:8083"
@@ -36,17 +49,11 @@ services:
     restart: unless-stopped
     command: ["/app/.venv/bin/iot-publisher"]
     environment:
-      - TZ=${TZ:-America/Bogota}
-      - MQTT_BROKER_HOST=emqx
-      - MQTT_BROKER_PORT=1883
-      - MQTT_TRANSPORT=tcp
-      - MQTT_USE_TLS=false
-      - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-iot/sensors}
-      - DEVICE_DEVICE_ID=${DEVICE_DEVICE_ID:-sensor-001}
-      - DEVICE_PUBLISH_INTERVAL_SECONDS=${DEVICE_PUBLISH_INTERVAL_SECONDS:-2}
-      - DEVICE_MIN_TEMPERATURE_CELSIUS=${DEVICE_MIN_TEMPERATURE_CELSIUS:-15}
-      - DEVICE_MAX_TEMPERATURE_CELSIUS=${DEVICE_MAX_TEMPERATURE_CELSIUS:-30}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      <<: *app-environment
+      DEVICE_DEVICE_ID: "${DEVICE_DEVICE_ID:-sensor-001}"
+      DEVICE_PUBLISH_INTERVAL_SECONDS: "${DEVICE_PUBLISH_INTERVAL_SECONDS:-2}"
+      DEVICE_MIN_TEMPERATURE_CELSIUS: "${DEVICE_MIN_TEMPERATURE_CELSIUS:-15}"
+      DEVICE_MAX_TEMPERATURE_CELSIUS: "${DEVICE_MAX_TEMPERATURE_CELSIUS:-30}"
     depends_on:
       emqx:
         condition: service_healthy
@@ -62,13 +69,7 @@ services:
     restart: unless-stopped
     command: ["/app/.venv/bin/iot-consumer"]
     environment:
-      - TZ=${TZ:-America/Bogota}
-      - MQTT_BROKER_HOST=emqx
-      - MQTT_BROKER_PORT=1883
-      - MQTT_TRANSPORT=tcp
-      - MQTT_USE_TLS=false
-      - MQTT_TOPIC_PREFIX=${MQTT_TOPIC_PREFIX:-iot/sensors}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      <<: *app-environment
     depends_on:
       emqx:
         condition: service_healthy
