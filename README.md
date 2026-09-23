@@ -25,12 +25,12 @@ See [`docs/architecture.md`](docs/architecture.md) for the C4 diagrams and [`doc
 
 The project is deployed and documented publicly:
 
-| Resource | URL |
-|---|---|
-| Documentation landing page | https://jalau-labs.github.io/iot-distributed-event-broker/ |
-| AsyncAPI reference (HTML) | https://jalau-labs.github.io/iot-distributed-event-broker/api/ |
-| Broker WebSocket endpoint | `wss://iot-emqx-broker.onrender.com/mqtt` |
-| Demo publisher health | https://iot-demo-publisher.onrender.com/health |
+| Resource                   | URL                                                            |
+|----------------------------|----------------------------------------------------------------|
+| Documentation landing page | https://jalau-labs.github.io/iot-distributed-event-broker/     |
+| AsyncAPI reference (HTML)  | https://jalau-labs.github.io/iot-distributed-event-broker/api/ |
+| Broker WebSocket endpoint  | `wss://iot-emqx-broker.onrender.com/mqtt`                      |
+| Demo publisher health      | https://iot-demo-publisher.onrender.com/health                 |
 
 The broker runs on Render's free tier under a best-effort policy: no SLA, no authentication, no persistence. See [`docs/deployment-render.md`](docs/deployment-render.md) for limitations.
 
@@ -40,7 +40,7 @@ The broker runs on Render's free tier under a best-effort policy: no SLA, no aut
 .
 ├── asyncapi.yaml               # AsyncAPI 3.0 specification of the event API
 ├── docker/
-│   ├── app/                    # Dockerfile for the Python application image
+│   ├── app/                    # Production image for the Python application
 │   └── emqx/                   # EMQX configs, Caddyfile, entrypoints
 ├── docs/                       # Architecture, sequence, deployment, and API guides
 │   └── pages/                  # Static landing page published to GitHub Pages
@@ -70,27 +70,71 @@ The broker runs on Render's free tier under a best-effort policy: no SLA, no aut
 
 ## Quick Start (Local)
 
+The full stack runs in Docker. No Python installation is required.
+
 ```bash
-# 1. Start the local MQTT broker
+# Build and start the broker, publisher, and consumer.
 make up
 
-# 2. Run the consumer in one terminal
+# Show the status of every service.
+make ps
+
+# Follow the logs of the publisher and the consumer.
+make up-logs
+
+# Follow the logs of a single service.
+docker compose logs -f consumer
+
+# Open a shell inside a running container.
+docker compose exec publisher bash
+docker compose exec consumer bash
+docker compose exec emqx bash
+
+# Stop the whole stack.
+make down
+```
+
+| Service     | Purpose                               | Exposed Port                              |
+|-------------|---------------------------------------|-------------------------------------------|
+| `emqx`      | MQTT broker + dashboard               | 1883 (MQTT), 8083 (WS), 18083 (dashboard) |
+| `publisher` | Simulated sensor publishing every 2 s | none                                      |
+| `consumer`  | Central event consumer                | none                                      |
+
+The EMQX dashboard is available at **http://localhost:18083** (`admin` / `public`).
+
+### Running only the broker
+
+If you have your own Python toolchain and want to run the publisher and
+consumer from the host:
+
+```bash
+# Start only the broker.
+make up-broker
+
+# Run the consumer from the host in one terminal.
 uv run iot-consumer
 
-# 3. Run the publisher in another terminal
+# Run the publisher from the host in another terminal.
 uv run iot-publisher
 ```
 
-Stop both processes with `Ctrl+C`. Stop the broker with `make down`.
+### Customising the stack
+
+Every value in `docker-compose.yml` can be overridden via `.env` or the
+shell:
+
+```bash
+DEVICE_DEVICE_ID=sensor-042 DEVICE_PUBLISH_INTERVAL_SECONDS=5 docker compose up -d publisher
+```
 
 ## Entry Points
 
 After `uv sync`, the following console scripts become available:
 
-| Command | Purpose |
-|---|---|
-| `iot-publisher` | Simulated sensor publisher |
-| `iot-consumer` | Central event consumer |
+| Command              | Purpose                                              |
+|----------------------|------------------------------------------------------|
+| `iot-publisher`      | Simulated sensor publisher                           |
+| `iot-consumer`       | Central event consumer                               |
 | `iot-demo-publisher` | Low-frequency publisher with HTTP `/health` endpoint |
 
 ## Quality Gates
