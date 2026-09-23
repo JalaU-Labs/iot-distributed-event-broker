@@ -33,6 +33,22 @@ This invokes the official AsyncAPI CLI via `npx` and generates a
 self-contained HTML site at `docs/api/index.html`. Requires Node.js
 (any LTS version) to be available on the path.
 
+### Version compatibility
+
+The template and the generator have version constraints that must
+match. The project pins `@asyncapi/html-template@3.0.0`, which requires
+the new generator (`>=2.0.0`). The CLI flag `--use-new-generator`
+selects it explicitly.
+
+| Template | Generator | CLI flag |
+|---|---|---|
+| `@asyncapi/html-template@2.x` | v1 (default) | none |
+| `@asyncapi/html-template@3.0.0` | v2 | `--use-new-generator` |
+| `@asyncapi/html-template@3.5.x` | v3 | none (requires CLI v5+) |
+
+Pinning a specific template version avoids the pipeline breaking when a
+new template is released with an incompatible generator requirement.
+
 ## What the specification declares
 
 - **Servers** — `localBroker` (TCP, port 1883) and `renderBroker`
