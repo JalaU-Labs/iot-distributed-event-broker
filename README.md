@@ -102,6 +102,22 @@ make down
 
 The EMQX dashboard is available at **http://localhost:18083** (`admin` / `public`).
 
+### Connecting to the cloud broker
+
+To point the CLI at the Render deployment, set the MQTT variables to the
+cloud broker and enable the wake-up waiter. The waiter polls the demo
+publisher until it responds, giving the free-tier broker time to wake up.
+
+```bash
+WAKEUP_ENABLED=true \
+MQTT_BROKER_HOST=iot-emqx-broker.onrender.com \
+MQTT_BROKER_PORT=443 \
+MQTT_TRANSPORT=websockets \
+MQTT_USE_TLS=true \
+MQTT_WS_PATH=/mqtt \
+uv run iot-consumer
+```
+
 ### Running only the broker
 
 If you have your own Python toolchain and want to run the publisher and

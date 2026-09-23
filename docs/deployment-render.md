@@ -117,6 +117,38 @@ sequenceDiagram
     R-->>R: Mark service as Live
 ```
 
+## Waking up a sleeping broker
+
+Render's free tier sleeps a web service after 15 minutes without inbound
+traffic. When both the broker and the demo publisher are asleep, the
+first connection attempt from a local client fails.
+
+To avoid manual retries, the CLI provides a wake-up waiter that polls
+the demo publisher's `/health` endpoint until it responds `200 OK`. Because
+the demo publisher is itself connected to the broker, a healthy demo
+implies a reachable broker.
+
+Enable it in `.env` or in the shell:
+
+```bash
+WAKEUP_ENABLED=true \
+WAKEUP_URL=https://iot-demo-publisher.onrender.com/health \
+WAKEUP_TIMEOUT_SECONDS=180 \
+MQTT_BROKER_HOST=iot-emqx-broker.onrender.com \
+MQTT_BROKER_PORT=443 \
+MQTT_TRANSPORT=websockets \
+MQTT_USE_TLS=true \
+MQTT_WS_PATH=/mqtt \
+uv run iot-consumer
+```
+
+The consumer will poll the endpoint every 5 seconds for up to 180
+seconds. As soon as the demo publisher responds, the consumer proceeds
+to open its own MQTT connection.
+
+The waiter is disabled by default so that local development is
+unaffected.
+
 ## Free Plan Limitations
 
 - **No persistent disk**: All messages and sessions are lost when the service restarts.
