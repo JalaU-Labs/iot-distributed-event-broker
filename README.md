@@ -13,18 +13,27 @@ Design and implement an IoT system that receives data from multiple distributed 
 - **Consumer**: Central service that subscribes to topics and processes events.
 - **Infrastructure**: Reproducible via Docker Compose and deployable to Render.
 
+See [docs/architecture.md](docs/architecture.md) for the full C4 diagrams, and [docs/sequence.md](docs/sequence.md) for the MQTT flow diagrams.
+
 ## Project Structure
 
 ```
 .
-├── docker/           # Dockerfiles and broker configuration
-├── docs/             # Architecture, sequence diagrams, deployment guides
-├── notebooks/        # Experimentation and evidence
-├── scripts/          # Entry point scripts
-├── src/iot_system/   # Main package (domain, application, infrastructure, presentation)
-├── tests/            # Unit and integration tests
+├── docker/                 # Dockerfiles and broker configuration
+│   └── emqx/               # EMQX configs, Caddyfile, entrypoints
+├── docs/                   # Architecture, sequence diagrams, deployment guides
+├── notebooks/              # Experimentation and evidence
+├── scripts/                # Ad-hoc scripts
+├── src/iot_system/
+│   ├── domain/             # Entities and protocols
+│   ├── application/        # Publisher, consumer, topic factory
+│   ├── infrastructure/     # Config, logging, cache, weather, MQTT, serialization
+│   └── presentation/       # CLI and composition root
+├── tests/
+│   ├── unit/               # Isolated unit tests
+│   └── integration/        # Tests against a running broker
 ├── docker-compose.yml
-├── render.yaml       # Render Blueprint for cloud deployment
+├── render.yaml
 ├── Makefile
 ├── pyproject.toml
 └── README.md
@@ -40,21 +49,36 @@ Design and implement an IoT system that receives data from multiple distributed 
 ## Quick Start (Local)
 
 ```bash
-# Start local MQTT broker
+# 1. Start the local MQTT broker
 make up
 
-# Run publisher
-uv run iot-publisher
-
-# Run consumer
+# 2. Run the consumer in one terminal
 uv run iot-consumer
+
+# 3. Run the publisher in another terminal
+uv run iot-publisher
 ```
+
+Stop both processes with `Ctrl+C`. Stop the broker with `make down`.
+
+## Quality Gates
+
+```bash
+make check              # format + lint + types + unit tests with coverage
+make test-integration   # integration tests against a running broker
+make pre-commit         # run pre-commit hooks
+```
+
+## Documentation
+
+- [Architecture (C4)](docs/architecture.md)
+- [Sequence diagrams](docs/sequence.md)
+- [Render deployment guide](docs/deployment-render.md)
+- [Evidence notebook](notebooks/01_mqtt_flow_evidence.ipynb)
 
 ## Deployment to Render
 
 See [docs/deployment-render.md](docs/deployment-render.md) for detailed instructions.
-
-The `render.yaml` file defines a free web service that runs the EMQX broker with MQTT over WebSockets. The broker is accessible at `wss://<service-name>.onrender.com/mqtt`.
 
 ## License
 
