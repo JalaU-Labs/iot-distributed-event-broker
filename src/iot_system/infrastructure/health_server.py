@@ -87,20 +87,24 @@ class HealthServer:
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ) -> None:
-        try:
-            request_line = await asyncio.wait_for(reader.readline(), timeout=5.0)
-            while True:
-                line = await asyncio.wait_for(reader.readline(), timeout=5.0)
-                if line in (b"\r\n", b"\n", b""):
-                    break
+        with suppress(Exception):
+            await self._serve_request(reader, writer)
+        with suppress(Exception):
+            writer.close()
+            await writer.wait_closed()
 
-            is_health = request_line.startswith(b"GET /health ")
-            response = _OK_RESPONSE if is_health else _NOT_FOUND_RESPONSE
-            writer.write(response)
-            await writer.drain()
-        except (TimeoutError, ConnectionError):
-            pass
-        finally:
-            with suppress(Exception):
-                writer.close()
-                await writer.wait_closed()
+    async def _serve_request(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+    ) -> None:
+        request_line = await asyncio.wait_for(reader.readline(), timeout=5.0)
+        while True:
+            line = await asyncio.wait_for(reader.readline(), timeout=5.0)
+            if line in (b"\r\n", b"\n", b""):
+                break
+
+        is_health = request_line.startswith(b"GET /health ")
+        response = _OK_RESPONSE if is_health else _NOT_FOUND_RESPONSE
+        writer.write(response)
+        await writer.drain()
